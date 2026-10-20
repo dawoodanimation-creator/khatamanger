@@ -1,0 +1,63 @@
+{
+  "browser": "154.0.8037.57",
+  "cpuThrottle": 4,
+  "viewport": "360x640",
+  "dataset": {
+    "customers": 500,
+    "transactions": 5000,
+    "bytes": 798483
+  },
+  "homeReadyMs": [
+    1807,
+    1566,
+    1717
+  ],
+  "searchMs": [
+    77,
+    36,
+    27,
+    31,
+    28,
+    26,
+    37,
+    32
+  ],
+  "clearSearchMs": [
+    90,
+    89,
+    96,
+    82,
+    92,
+    89,
+    93,
+    86
+  ],
+  "saveMs": 222,
+  "addButton": {
+    "x": 20,
+    "y": 568,
+    "width": 320,
+    "height": 56
+  },
+  "summary": {
+    "home": {
+      "median": 1717,
+      "p95": 1807,
+      "min": 1566,
+      "max": 1807
+    },
+    "search": {
+      "median": 32,
+      "p95": 77,
+      "min": 26,
+      "max": 77
+    },
+    "clear": {
+      "median": 90,
+      "p95": 96,
+      "min": 82,
+      "max": 96
+    }
+  },
+  "limits": "Synthetic Linux Chromium production build; no hardware, network/IME, sunlight or human typing measurement. Save n=1."
+}

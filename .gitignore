@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+.env*
+
+test-results/
+playwright-report/
+
+.npm-cache/
+.openai/*.tar.gz
+
+.vercel/
+
+khata-preview-source.zip
+
+.github-upload/

@@ -1,0 +1,96 @@
+{
+  "normalBalance": 7000,
+  "amountParsing": {
+    "0": null,
+    "-1": null,
+    "0.01": 1,
+    "1.005": null,
+    "12.34": 1234,
+    "۱۲.۳۴": 1234,
+    "١٢.٣٤": 1234,
+    "12٫34": null,
+    "9999999999.99": 999999999999,
+    "10000000000": null
+  },
+  "formatting": [
+    {
+      "paisa": 999999999999,
+      "actual": "Rs 9,999,999,999.99",
+      "expected": "Rs 9,999,999,999.99",
+      "correct": true
+    },
+    {
+      "paisa": 9007199254740991,
+      "actual": "Rs 90,071,992,547,409.90",
+      "expected": "Rs 90,071,992,547,409.91",
+      "correct": false
+    },
+    {
+      "paisa": 9007199254740990,
+      "actual": "Rs 90,071,992,547,409.90",
+      "expected": "Rs 90,071,992,547,409.90",
+      "correct": true
+    },
+    {
+      "paisa": 9007199254740989,
+      "actual": "Rs 90,071,992,547,409.89",
+      "expected": "Rs 90,071,992,547,409.89",
+      "correct": true
+    }
+  ],
+  "backdated": [
+    {
+      "id": "old",
+      "balance": 1000
+    },
+    {
+      "id": "new",
+      "balance": 500
+    }
+  ],
+  "transactionCorrectionExports": [
+    "addTransaction"
+  ],
+  "customerDelete": {
+    "customers": [],
+    "transactions": [],
+    "settings": {
+      "language": "en",
+      "darkMode": false
+    }
+  },
+  "backupValidation": {
+    "invalidDate": {
+      "accepted": true,
+      "date": "2020-02-30T00:00:00.000",
+      "displayDate": "2020-03-01T00:00:00.000Z",
+      "phone": "03001234567"
+    },
+    "dateOnly": {
+      "accepted": true,
+      "date": "2020-01-01",
+      "displayDate": "2020-01-01T00:00:00.000Z",
+      "phone": "03001234567"
+    },
+    "invalidPhone": {
+      "accepted": true,
+      "displayDate": null,
+      "phone": "not a phone"
+    },
+    "invalidJSON": {
+      "accepted": false,
+      "error": "SyntaxError: Unexpected token 'o', \"not JSON\" is not valid JSON"
+    }
+  },
+  "largeLedgerFormat": {
+    "transactions": 9008,
+    "construction": "9007 maximum credits plus a final credit reaching MAX_SAFE_INTEGER",
+    "requiredLastAmount": 199254749998,
+    "validSchemaAccepted": true,
+    "exactBalanceValidationPassed": true,
+    "bytes": 1413298,
+    "balance": 9007199254740991,
+    "display": "Rs 90,071,992,547,409.90",
+    "expected": "Rs 90,071,992,547,409.91"
+  }
+}

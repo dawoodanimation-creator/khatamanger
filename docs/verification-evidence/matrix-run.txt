@@ -1,0 +1,20 @@
+
+Running 8 tests using 1 worker
+
+(node:6432) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 e2e/review-matrix.spec.ts:12:5 › 360-en-light › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (13.5s)
+  ✓  2 e2e/review-matrix.spec.ts:12:5 › 360-en-dark › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.4s)
+  ✓  3 e2e/review-matrix.spec.ts:12:5 › 360-ur-light › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.2s)
+  ✓  4 e2e/review-matrix.spec.ts:12:5 › 360-ur-dark › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.6s)
+  ✓  5 e2e/review-matrix.spec.ts:12:5 › 412-en-light › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.9s)
+  ✓  6 e2e/review-matrix.spec.ts:12:5 › 412-en-dark › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.7s)
+  ✓  7 e2e/review-matrix.spec.ts:12:5 › 412-ur-light › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.6s)
+  ✓  8 e2e/review-matrix.spec.ts:12:5 › 412-ur-dark › top journeys, RTL/overflow, actual downloads, restore and axe including dialogs (11.1s)
+
+  8 passed (1.6m)
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

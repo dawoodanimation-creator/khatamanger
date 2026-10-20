@@ -1,0 +1,212 @@
+{
+  "method": {
+    "cpuThrottle": 4,
+    "viewport": "360x640",
+    "iterations": 3,
+    "typing": "fill(), no human typing/comprehension time; field focus is counted as a tap",
+    "scroll": "auto-scroll is detected separately; manual swipe count is not measured",
+    "message": "WhatsApp destination intercepted; no message sent; OS composer and send not verified"
+  },
+  "tasks": {
+    "add customer": {
+      "runs": [
+        {
+          "taps": 4,
+          "elapsedMs": 1026,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 1034,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 953,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 4,
+      "medianMs": 1026,
+      "rangeMs": [
+        953,
+        1034
+      ]
+    },
+    "record udhaar from Home": {
+      "runs": [
+        {
+          "taps": 4,
+          "elapsedMs": 1294,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 1417,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 1248,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 4,
+      "medianMs": 1294,
+      "rangeMs": [
+        1248,
+        1417
+      ]
+    },
+    "record payment from Home": {
+      "runs": [
+        {
+          "taps": 4,
+          "elapsedMs": 1239,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 1168,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 4,
+          "elapsedMs": 1234,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 4,
+      "medianMs": 1234,
+      "rangeMs": [
+        1168,
+        1239
+      ]
+    },
+    "record udhaar from detail": {
+      "runs": [
+        {
+          "taps": 3,
+          "elapsedMs": 1347,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 907,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 940,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 3,
+      "medianMs": 940,
+      "rangeMs": [
+        907,
+        1347
+      ]
+    },
+    "record payment from detail": {
+      "runs": [
+        {
+          "taps": 3,
+          "elapsedMs": 857,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 1111,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 1030,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 3,
+      "medianMs": 1030,
+      "rangeMs": [
+        857,
+        1111
+      ]
+    },
+    "reminder handoff": {
+      "runs": [
+        {
+          "taps": 3,
+          "elapsedMs": 838,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 873,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 926,
+          "autoScrollObserved": true
+        }
+      ],
+      "taps": 3,
+      "medianMs": 873,
+      "rangeMs": [
+        838,
+        926
+      ]
+    },
+    "find customer": {
+      "runs": [
+        {
+          "taps": 2,
+          "elapsedMs": 456,
+          "autoScrollObserved": false
+        },
+        {
+          "taps": 2,
+          "elapsedMs": 391,
+          "autoScrollObserved": false
+        },
+        {
+          "taps": 2,
+          "elapsedMs": 430,
+          "autoScrollObserved": false
+        }
+      ],
+      "taps": 2,
+      "medianMs": 430,
+      "rangeMs": [
+        391,
+        456
+      ]
+    },
+    "backup download": {
+      "runs": [
+        {
+          "taps": 3,
+          "elapsedMs": 1352,
+          "autoScrollObserved": true
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 1181,
+          "autoScrollObserved": false
+        },
+        {
+          "taps": 3,
+          "elapsedMs": 1003,
+          "autoScrollObserved": false
+        }
+      ],
+      "taps": 3,
+      "medianMs": 1181,
+      "rangeMs": [
+        1003,
+        1352
+      ]
+    }
+  }
+}

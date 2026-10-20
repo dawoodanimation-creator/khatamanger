@@ -1,0 +1,1314 @@
+{
+  "axe": {
+    "version": "4.10.3",
+    "available": true,
+    "sourceHash": "880970c081707360e64f34cea25ff91892f5bc95675b0776925b9709dd8a68bb",
+    "error": null
+  },
+  "screens": [
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(220, 229, 220)",
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(25, 57, 47)",
+        "body": "rgb(233, 238, 233)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "help": "Elements must meet minimum color contrast ratio thresholds",
+            "nodes": [
+              {
+                "target": [
+                  ".urdu-label"
+                ],
+                "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.3 (foreground color: #66766f, background color: #f0f4ef, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+              }
+            ]
+          }
+        ],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": false,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 30
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(54, 75, 63)",
+        "background": "rgb(30, 48, 40)",
+        "text": "rgb(237, 243, 233)",
+        "body": "rgb(16, 27, 23)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 31
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "en",
+      "darkMode": true,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(220, 229, 220)",
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(25, 57, 47)",
+        "body": "rgb(233, 238, 233)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "help": "Elements must meet minimum color contrast ratio thresholds",
+            "nodes": [
+              {
+                "target": [
+                  "button[lang=\"en\"]"
+                ],
+                "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.3 (foreground color: #66766f, background color: #f0f4ef, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+              }
+            ]
+          }
+        ],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(54, 75, 63)",
+        "background": "rgb(30, 48, 40)",
+        "text": "rgb(237, 243, 233)",
+        "body": "rgb(16, 27, 23)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(220, 229, 220)",
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(25, 57, 47)",
+        "body": "rgb(233, 238, 233)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "help": "Elements must meet minimum color contrast ratio thresholds",
+            "nodes": [
+              {
+                "target": [
+                  ".urdu-label"
+                ],
+                "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.3 (foreground color: #66766f, background color: #f0f4ef, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+              }
+            ]
+          }
+        ],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": false,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 30
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(54, 75, 63)",
+        "background": "rgb(30, 48, 40)",
+        "text": "rgb(237, 243, 233)",
+        "body": "rgb(16, 27, 23)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 31
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "en",
+      "darkMode": true,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(220, 229, 220)",
+        "background": "rgb(255, 255, 255)",
+        "text": "rgb(25, 57, 47)",
+        "body": "rgb(233, 238, 233)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "help": "Elements must meet minimum color contrast ratio thresholds",
+            "nodes": [
+              {
+                "target": [
+                  "button[lang=\"en\"]"
+                ],
+                "failure": "Fix any of the following:\n  Element has insufficient color contrast of 4.3 (foreground color: #66766f, background color: #f0f4ef, font size: 11.3pt (15px), font weight: normal). Expected contrast ratio of 4.5:1"
+              }
+            ]
+          }
+        ],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": false,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 30
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/new",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "inputStyles": {
+        "fontSize": "16px",
+        "border": "rgb(54, 75, 63)",
+        "background": "rgb(30, 48, 40)",
+        "text": "rgb(237, 243, 233)",
+        "body": "rgb(16, 27, 23)"
+      },
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "balanceIcons": 0,
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 31
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1/credit",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/customers/c1/payment",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [
+          {
+            "id": "color-contrast",
+            "impact": "serious",
+            "nodeCount": 1
+          }
+        ],
+        "passes": 33
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/settings",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 34
+      }
+    },
+    {
+      "width": 412,
+      "height": 915,
+      "language": "ur",
+      "darkMode": true,
+      "route": "/settings/backup",
+      "overflow": {
+        "document": false,
+        "main": false
+      },
+      "smallTargets": [],
+      "axe": {
+        "violations": [],
+        "incomplete": [],
+        "passes": 32
+      },
+      "pageErrors": []
+    }
+  ],
+  "summary": {
+    "scans": 56,
+    "axeAvailable": true,
+    "violationInstances": 4,
+    "seriousCriticalInstances": 4,
+    "overflowScreens": 0,
+    "smallTargetScreens": 0
+  }
+}

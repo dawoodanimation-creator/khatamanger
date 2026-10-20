@@ -1,0 +1,83 @@
+{
+  "configuration": {
+    "width": 360,
+    "height": 640,
+    "language": "en",
+    "darkMode": false
+  },
+  "axeVersion": "4.14.0",
+  "scans": [
+    {
+      "screen": "home-empty",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "customer-new",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "credit",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "payment",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "detail",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "delete-dialog",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "customer-edit",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "home",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "settings",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "reset-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1
+        }
+      ]
+    },
+    {
+      "screen": "backup",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "screen": "restore-dialog",
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1
+        }
+      ]
+    }
+  ]
+}

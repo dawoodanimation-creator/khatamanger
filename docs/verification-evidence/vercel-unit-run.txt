@@ -1,0 +1,23 @@
+
+> khata-preview@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /workspace/khata-preview
+
+ ✓ src/App.test.tsx (12 tests) 1865ms
+   ✓ complete customer flow > validates, saves, records credit/payment and persists after remount  692ms
+ ✓ src/utils/audit-regressions.test.ts (25 tests) 79ms
+ ✓ src/i18n/i18n.test.ts (2 tests) 9ms
+ ✓ src/state/mutations.test.ts (6 tests) 7ms
+ ✓ src/utils/balance.test.ts (8 tests) 10ms
+ ✓ src/utils/backup.test.ts (2 tests) 5ms
+ ✓ src/state/storage.test.ts (2 tests) 4ms
+ ✓ src/theme/contrast.test.ts (4 tests) 4ms
+ ✓ src/utils/reminders.test.ts (3 tests) 4ms
+
+ Test Files  9 passed (9)
+      Tests  64 passed (64)
+   Start at  04:19:21
+   Duration  5.30s (transform 370ms, setup 0ms, collect 1.00s, tests 1.99s, environment 532ms, prepare 613ms)
+

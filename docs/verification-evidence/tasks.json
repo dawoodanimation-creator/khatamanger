@@ -1,0 +1,115 @@
+{
+  "cpuThrottle": 4,
+  "viewport": "360x640",
+  "samples": [
+    {
+      "task": "add",
+      "samples": [
+        {
+          "taps": 3,
+          "ms": 570
+        },
+        {
+          "taps": 3,
+          "ms": 374
+        },
+        {
+          "taps": 3,
+          "ms": 412
+        }
+      ],
+      "medianMs": 412
+    },
+    {
+      "task": "credit",
+      "samples": [
+        {
+          "taps": 3,
+          "ms": 398
+        },
+        {
+          "taps": 3,
+          "ms": 476
+        },
+        {
+          "taps": 3,
+          "ms": 588
+        }
+      ],
+      "medianMs": 476
+    },
+    {
+      "task": "payment",
+      "samples": [
+        {
+          "taps": 3,
+          "ms": 473
+        },
+        {
+          "taps": 3,
+          "ms": 587
+        },
+        {
+          "taps": 3,
+          "ms": 416
+        }
+      ],
+      "medianMs": 473
+    },
+    {
+      "task": "reminder-handoff",
+      "samples": [
+        {
+          "taps": 2,
+          "ms": 391
+        },
+        {
+          "taps": 2,
+          "ms": 358
+        },
+        {
+          "taps": 2,
+          "ms": 380
+        }
+      ],
+      "medianMs": 380
+    },
+    {
+      "task": "find",
+      "samples": [
+        {
+          "taps": 2,
+          "ms": 230
+        },
+        {
+          "taps": 2,
+          "ms": 199
+        },
+        {
+          "taps": 2,
+          "ms": 271
+        }
+      ],
+      "medianMs": 230
+    },
+    {
+      "task": "backup-download",
+      "samples": [
+        {
+          "taps": 2,
+          "ms": 356
+        },
+        {
+          "taps": 2,
+          "ms": 273
+        },
+        {
+          "taps": 2,
+          "ms": 285
+        }
+      ],
+      "medianMs": 285
+    }
+  ],
+  "limits": "Automation excludes human typing/comprehension/IME and swipe counts. Reminder ends at intercepted link handoff, not OS Send; backup ends at parsed browser download, not phone Files confirmation. Human <=10s NOT VERIFIED."
+}

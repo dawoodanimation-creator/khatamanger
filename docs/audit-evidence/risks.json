@@ -1,0 +1,118 @@
+{
+  "staleTabs": {
+    "afterFirstAmounts": [
+      10000,
+      1000
+    ],
+    "afterSecondAmounts": [
+      10000,
+      2000
+    ],
+    "expectedAmounts": [
+      10000,
+      1000,
+      2000
+    ],
+    "lostFirstCredit": true
+  },
+  "corruptStorage": {
+    "heading": "Your ledger could not be opened.",
+    "interactiveActions": 0,
+    "rawPreserved": true
+  },
+  "reservedCustomerId": {
+    "url": "http://127.0.0.1:4173/customers/new",
+    "heading": "Add customer",
+    "creditActionCount": 0
+  },
+  "phoneSearch": {
+    "3001234567": 0,
+    "03001234567": 0,
+    "123-4567": 1
+  },
+  "urduPhone": {
+    "error": "Enter a valid phone number (7–15 digits).",
+    "stillOnForm": true
+  },
+  "duplicateCustomer": {
+    "sameNameAndPhoneCount": 2,
+    "warningDialogCount": 0
+  },
+  "identityAndDelete": {
+    "transactionHelp": "Ali KhanAdds to the amount the customer owes you.",
+    "phoneInForm": false,
+    "deleteDialog": "Delete customer?This permanently deletes this customer and their entire transaction history.CancelDelete",
+    "nameInDelete": false,
+    "phoneInDelete": false,
+    "balanceInDelete": false
+  },
+  "extraZeroAndDoubleTap": {
+    "saveLabel": "Save",
+    "storedNewAmounts": [
+      100000
+    ],
+    "pastTransactionButtons": 0,
+    "summary": "03001234567Current balanceRs 1,100.00Owes youSend balance reminder"
+  },
+  "backupGuards": {
+    "badJSONRejected": true,
+    "invalidDateReachedConfirmation": true,
+    "warning": "Replace current data?Import replaces ALL customers, transactions, language and theme. Export a backup first. This cannot be undone.Selected backupinvalid-date.jsonCustomers1Transactions1CancelReplace data",
+    "cancelPreservedRaw": true
+  },
+  "hiddenFileTabStop": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Export JSON backup",
+      "width": 278,
+      "height": 56,
+      "class": "button button-primary"
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "label": "Import JSON backup",
+      "width": 278,
+      "height": 56,
+      "class": "button button-secondary"
+    },
+    {
+      "tag": "INPUT",
+      "type": "file",
+      "label": "Import JSON backup",
+      "width": 1,
+      "height": 1,
+      "class": "sr-only"
+    },
+    {
+      "tag": "BODY",
+      "type": null,
+      "label": "WEB PREVIEWAll 3 steps completeKhata ManagerReady for your final review.Backup & restoreSave a backup regularly to a safe place. Backups include customer names, phone numbers and transactions in plain text.Export JSON backupImport JSON backupStored on this device. No login or cloud sync.Customers · Transactions · Backup · English / UrduA separate preview. Your Flutter app is unchanged.\n",
+      "width": 360,
+      "height": 640,
+      "class": ""
+    }
+  ],
+  "urduReminderSmallScreen": {
+    "dialog": {
+      "top": 56.140625,
+      "bottom": 583.84375,
+      "client": 526,
+      "scroll": 526,
+      "scrollTop": 0
+    },
+    "cancel": {
+      "top": 497.59375,
+      "bottom": 558.84375
+    },
+    "cancelWithinDialog": true,
+    "focused": true
+  },
+  "offline": {
+    "loadedAppNavigationWorks": true,
+    "reloadWorks": false,
+    "reloadError": "Error: page.reload: net::ERR_INTERNET_DISCONNECTED",
+    "recordsSurviveReconnect": true
+  }
+}
