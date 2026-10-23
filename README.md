@@ -1,3 +1,5 @@
+> **Hosting status:** Source uploaded to [dawoodanimation-creator/khatamanger](https://github.com/dawoodanimation-creator/khatamanger). Vercel project creation is blocked by a 403 permission error; no Vercel live URL is confirmed. See [deployment instructions](docs/DEPLOYMENT.md).
+
 > **Audit remediation (19 October 2026):** A-01–A-15 implemented locally; current results, limits and 10-minute test script are in [docs/VERIFICATION.md](docs/VERIFICATION.md). The existing hosted preview has **not** been updated with these fixes; Sites packaging is unavailable here. Flutter was not accessed or modified.
 
 # Khata Manager · Web preview

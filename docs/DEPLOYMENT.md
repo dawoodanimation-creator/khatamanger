@@ -1,28 +1,35 @@
-# GitHub / Vercel deployment — 20 October 2026 (Pakistan time)
+# GitHub / Vercel deployment
 
-## Current state
+## Confirmed current state
 
-- Working directory: `/workspace/khata-preview` only. Flutter was not accessed or changed.
-- GitHub authenticated identity verified: `dawoodanimation-creator`.
-- Requested new private repository: `khata-preview`.
-- Repository creation attempted with the connected GitHub credentials; GitHub rejected it: `Resource not accessible by integration (createRepository)`. **The agent could not create a repository.** The owner subsequently created the repository linked below.
-- Vercel connection is now confirmed. Owner supplied repository https://github.com/dawoodanimation-creator/khatamanger ; verified empty, public, with push access. Its visibility is preserved. Deployment is in progress.
-- Existing Sites remote/deployment are unchanged. No Vercel live URL exists yet.
+- Repository: https://github.com/dawoodanimation-creator/khatamanger
+- Owner supplied this public repository. Its visibility was preserved.
+- Latest app source was pushed successfully to `main`, initial app commit `d0c1049c2b40a432877bc2e3a0ad1f81ca051bde`.
+- Source includes audit fixes, models, English/Urdu strings, tests, documentation and Vercel setup. Git metadata, Sites identity, environment files, dependencies and caches were excluded from the clean snapshot.
+- Production build/TypeScript and 64 unit/DOM tests passed before upload. Evidence: `docs/verification-evidence/vercel-build.txt` and `vercel-unit-run.txt`.
+- Vercel is connected, with discovered team `dawoodanimation-creator` (`team_kQFNkglrtVgVmBDIzP9HcRr8`).
+- Creating the Git-linked project returned **403 Forbidden: You don't have permission to create the project**. A later project-list check still returned no matching project.
+- No authenticated CLI fallback is configured. No automatic permission fix was asserted and the rejected creation request was not repeatedly retried unchanged.
+- **No successful Vercel deployment/live URL exists yet.** GitHub upload is complete; hosting remains blocked by project-creation access.
+- Work stayed in `/workspace/khata-preview`; Flutter was not accessed or modified. Existing Sites remote/deployment are unchanged.
 
-## Prepared and validated
+## Prepared hosting configuration
 
-- `vercel.json`: Vite framework, `npm run build`, `dist` output, SPA fallback for customer/settings deep links, assets excluded from fallback.
-- `.gitignore`: local `.vercel` state and generated source ZIP excluded, alongside existing dependencies/cache/env/build exclusions.
-- Production build/TypeScript passed: `docs/verification-evidence/vercel-build.txt`.
-- Unit/DOM suite passed, 64 tests: `docs/verification-evidence/vercel-unit-run.txt`.
-- Hosting setup adds no application features. Previous audit/human-test limitations still apply; this is a preview deployment, not a certified shop-use release.
-- `khata-preview-source.zip`: portable source/config/docs, excluding Git metadata, dependencies, build output, caches, local env files and Sites identity. Extract into an empty repository directory; do not commit the ZIP itself.
+`vercel.json` selects Vite, build command `npm run build`, output directory `dist`, and SPA fallback for direct customer/settings URLs. Assets are excluded from the fallback. No application environment variables, backend or paid service are needed.
 
-## Required access to finish
+## One-time dashboard action required
 
-1. Create an **empty private** GitHub repository named `khata-preview` at https://github.com/new and supply its URL, or grant repository-creation capability through an approved account connection. The current connected integration cannot do it.
-2. Connect Vercel to this chat/account. No plaintext credentials should be pasted into chat or committed.
-3. With access verified: push the reviewed source to the new repository, import/link it in Vercel, keep the free plan/no paid services, deploy, and verify Home plus direct `/customers/new`, `/settings`, and customer-detail routes.
-4. Record the actual repository URL, commit SHA and successful Vercel deployment URL here. Until then, do not claim upload/deployment complete.
+Open https://vercel.com/new in the intended account/team, import `dawoodanimation-creator/khatamanger`, then choose Deploy:
 
-If doing the Vercel import manually: Add New → Project → import the new GitHub repository; framework Vite, root directory `.`, build command `npm run build`, output `dist`. No application environment variables are required. Keep the repository private; no real ledger data belongs in the repository. LocalStorage data does not migrate between the old Sites URL and the new Vercel origin; use the existing backup/restore flow if needed.
+- Framework: Vite
+- Root directory: `.`
+- Build command: `npm run build`
+- Output directory: `dist`
+
+If the repo is not listed, allow the Vercel GitHub integration access to this repository. Do not paste tokens into chat or commit credentials. Send the resulting project/deployment URL so its build status, Home and direct routes can be verified. Do not assume a guessed `.vercel.app` address is live.
+
+## Verification after deployment
+
+Confirm the served commit matches the intended `main` revision and the deployment is READY. Verify `/`, `/customers/new`, `/settings`, `/settings/backup` and a real customer deep link; confirm JS/fonts load, refresh works and existing backup/restore operates. If deployment protection is present, use authorized access without weakening it.
+
+The audit's remaining human/device checks and backlog are unchanged; deployment is a review preview, not certification for shop-use readiness. LocalStorage does not migrate between the old Sites URL and the new Vercel origin; use existing backup/restore if needed.
