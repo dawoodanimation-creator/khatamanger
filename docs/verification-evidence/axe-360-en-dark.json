@@ -134,13 +134,7 @@
     {
       "screen": "settings",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "nodes": 3
-        }
-      ]
+      "incomplete": []
     },
     {
       "screen": "reset-dialog",
@@ -156,13 +150,7 @@
     {
       "screen": "backup",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "nodes": 1
-        }
-      ]
+      "incomplete": []
     },
     {
       "screen": "restore-dialog",

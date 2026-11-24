@@ -59,7 +59,9 @@ export function Settings() {
         {/* Section 1: Appearance */}
         <section className="settings-group-card">
           <div className="settings-section-header">
-            <Palette size={18} aria-hidden="true" />
+            <span className="settings-header-icon badge-appearance" aria-hidden="true">
+              <Palette size={16} />
+            </span>
             <h2>{t('appearance')}</h2>
           </div>
 
@@ -116,7 +118,9 @@ export function Settings() {
         {/* Section 2: Security */}
         <section className="settings-group-card">
           <div className="settings-section-header">
-            <ShieldCheck size={18} aria-hidden="true" />
+            <span className="settings-header-icon badge-security" aria-hidden="true">
+              <ShieldCheck size={16} />
+            </span>
             <h2>{t('security')}</h2>
           </div>
 
@@ -164,7 +168,9 @@ export function Settings() {
         {/* Section 3: Data & Backup */}
         <section className="settings-group-card">
           <div className="settings-section-header">
-            <HardDrive size={18} aria-hidden="true" />
+            <span className="settings-header-icon badge-data" aria-hidden="true">
+              <HardDrive size={16} />
+            </span>
             <h2>{t('data')}</h2>
           </div>
 
@@ -180,7 +186,9 @@ export function Settings() {
             aria-expanded={devOpen}
           >
             <div className="flex items-center gap-2">
-              <FlaskConical size={16} aria-hidden="true" />
+              <span className="settings-header-icon badge-dev" aria-hidden="true">
+                <FlaskConical size={16} />
+              </span>
               <span>{t('developerOptions')}</span>
             </div>
             {devOpen ? (
@@ -198,20 +206,22 @@ export function Settings() {
         {/* Section 5: About */}
         <section className="settings-group-card about-card">
           <div className="settings-section-header">
-            <Info size={18} aria-hidden="true" />
+            <span className="settings-header-icon badge-about" aria-hidden="true">
+              <Info size={16} />
+            </span>
             <h2>{t('about')}</h2>
           </div>
 
           <div className="setting-row">
-            <span>{t('currency')}</span>
+            <span className="text-muted text-sm">{t('currency')}</span>
             <strong>
               <bdi dir="ltr">{t('currencyLabel')}</bdi> (PKR)
             </strong>
           </div>
 
           <div className="setting-row">
-            <span>App Version</span>
-            <span className="text-muted text-sm">{t('appVersion')}</span>
+            <span className="text-muted text-sm">App Version</span>
+            <span className="app-version-badge">{t('appVersion')}</span>
           </div>
 
           <p className="muted-copy text-center offline-notice">{t('offline')}</p>

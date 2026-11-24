@@ -86,10 +86,12 @@ export const CustomerCard = memo(function CustomerCard({
             <span className="customer-phone" dir="ltr">
               <bdi>{customer.phone}</bdi>
             </span>
-            <span className="customer-meta-bullet" aria-hidden="true">•</span>
-            <span className="customer-activity" title={t('lastActivity')}>
-              <Clock aria-hidden="true" className="meta-icon" />
-              <span>{relativeActivity}</span>
+            <span className="customer-meta-activity-group">
+              <span className="customer-meta-bullet" aria-hidden="true">•</span>
+              <span className="customer-activity" title={t('lastActivity')}>
+                <Clock aria-hidden="true" className="meta-icon" />
+                <span>{relativeActivity}</span>
+              </span>
             </span>
           </div>
         </div>
