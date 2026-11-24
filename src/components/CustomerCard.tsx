@@ -65,7 +65,6 @@ export const CustomerCard = memo(function CustomerCard({
       <Link
         to={customerPath(customer.id)}
         className="customer-card-main-link"
-        aria-label={`${customer.name}, ${relationText}, ${isSettled ? '0' : money(balance, t('currencyLabel'))}`}
       >
         {/* Initials Avatar */}
         <div

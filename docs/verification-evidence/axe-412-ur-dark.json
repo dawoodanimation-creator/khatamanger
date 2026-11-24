@@ -12,6 +12,11 @@
       "violations": [],
       "incomplete": [
         {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": 1
+        },
+        {
           "id": "color-contrast",
           "impact": "serious",
           "nodes": 1
@@ -20,18 +25,43 @@
     },
     {
       "screen": "customer-new",
-      "violations": [],
+      "violations": [
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "nodes": [
+            {
+              "target": [
+                "h3"
+              ],
+              "summary": "Fix any of the following:\n  Heading order invalid"
+            }
+          ]
+        }
+      ],
       "incomplete": []
     },
     {
       "screen": "credit",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "payment",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "detail",
@@ -45,13 +75,31 @@
     },
     {
       "screen": "customer-edit",
-      "violations": [],
+      "violations": [
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "nodes": [
+            {
+              "target": [
+                "h3"
+              ],
+              "summary": "Fix any of the following:\n  Heading order invalid"
+            }
+          ]
+        }
+      ],
       "incomplete": []
     },
     {
       "screen": "home",
       "violations": [],
       "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": 1
+        },
         {
           "id": "color-contrast",
           "impact": "serious",

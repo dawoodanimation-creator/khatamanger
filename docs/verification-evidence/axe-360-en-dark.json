@@ -10,47 +10,137 @@
     {
       "screen": "home-empty",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "customer-new",
-      "violations": [],
-      "incomplete": []
+      "violations": [
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "nodes": [
+            {
+              "target": [
+                "h3"
+              ],
+              "summary": "Fix any of the following:\n  Heading order invalid"
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "credit",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 4
+        }
+      ]
     },
     {
       "screen": "payment",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 4
+        }
+      ]
     },
     {
       "screen": "detail",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "delete-dialog",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1
+        }
+      ]
     },
     {
       "screen": "customer-edit",
-      "violations": [],
-      "incomplete": []
+      "violations": [
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "nodes": [
+            {
+              "target": [
+                "h3"
+              ],
+              "summary": "Fix any of the following:\n  Heading order invalid"
+            }
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "home",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": 1
+        },
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2
+        }
+      ]
     },
     {
       "screen": "settings",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 3
+        }
+      ]
     },
     {
       "screen": "reset-dialog",
@@ -66,7 +156,13 @@
     {
       "screen": "backup",
       "violations": [],
-      "incomplete": []
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 1
+        }
+      ]
     },
     {
       "screen": "restore-dialog",

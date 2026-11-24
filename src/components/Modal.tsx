@@ -13,12 +13,21 @@ export function Modal({ title, children, onDismiss, actions }: ModalProps) {
     document.documentElement.style.overflow = 'hidden';
     node.showModal();
     cancel.current?.focus({ preventScroll: true });
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onDismiss();
+      }
+    }
+    node.addEventListener('keydown', handleKeyDown);
+
     return () => {
+      node.removeEventListener('keydown', handleKeyDown);
       node.close();
       document.documentElement.style.overflow = overflow;
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, []);
+  }, [onDismiss]);
   return <dialog ref={dialog} className="modal" aria-modal="true" aria-labelledby={heading} onCancel={event => { event.preventDefault(); onDismiss(); }}>
     <div className="modal-body"><h2 id={heading}>{title}</h2>{children}
       <div className="modal-actions"><button ref={cancel} className="button button-secondary" type="button" onClick={onDismiss}>{t('cancel')}</button>{actions}</div>

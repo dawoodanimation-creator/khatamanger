@@ -18,19 +18,7 @@ export function writeLedger(storage: Pick<Storage, 'setItem'>, ledger: Ledger): 
 }
 export class CommitConflict extends Error {}
 export class LockUnavailable extends Error {}
-let writeQueue: Promise<unknown> = Promise.resolve();
-/** All cooperating tabs use the same origin-wide lock; environments without Web Locks fallback to sequential execution. */
 export async function serializedWrite<T>(write: () => T | Promise<T>): Promise<T> {
-  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
-    return navigator.locks.request(`${STORAGE_KEY}.write`, { mode: 'exclusive' }, write);
-  }
-  const prev = writeQueue;
-  let resolveCurrent: () => void;
-  writeQueue = new Promise<void>(resolve => { resolveCurrent = resolve; });
-  try {
-    await prev;
-    return await write();
-  } finally {
-    resolveCurrent!();
-  }
+  if (!navigator.locks?.request) throw new LockUnavailable();
+  return navigator.locks.request(`${STORAGE_KEY}.write`, { mode: 'exclusive' }, write);
 }

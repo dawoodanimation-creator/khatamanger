@@ -13,6 +13,12 @@ export function localDate(value: string, language: Language): string {
   }).format(new Date(value));
 }
 
+export function monthYearLabel(value: string, language: Language): string {
+  return new Intl.DateTimeFormat(language === 'ur' ? 'ur-PK' : 'en-PK', {
+    month: 'long', year: 'numeric',
+  }).format(new Date(value));
+}
+
 /** ISO calendar dates/timestamps only. Date.parse alone normalizes February 30. */
 export function validBackupDate(value: string): boolean {
   const match = /^(\d{4})-(\d{2})-(\d{2})(?:T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d{1,6})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/.exec(value);
