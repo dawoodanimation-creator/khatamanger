@@ -15,7 +15,7 @@ export function BalanceSummary({ outstanding, payable, hidden, onToggleHidden }:
   return (
     <section className="outstanding-card" aria-label={t('outstanding')}>
       <div className="hero-top flex items-center justify-between">
-        <span className="hero-subtitle">{t('app')}</span>
+        <span className="hero-subtitle">{t('overview')}</span>
         <button
           type="button"
           className="hero-icon"
@@ -26,19 +26,19 @@ export function BalanceSummary({ outstanding, payable, hidden, onToggleHidden }:
         </button>
       </div>
 
-      <div className="hero-grid">
-        <div className="hero-col hero-col-receive">
-          <span className="hero-col-label">{t('outstanding')}</span>
-          <bdi dir="ltr" className="hero-col-amount dominant">
+      <div className="hero-balance-stack">
+        {/* Dominant "To receive" */}
+        <div className="hero-receive-block">
+          <span className="hero-receive-label">{t('outstanding')}</span>
+          <bdi dir="ltr" className="hero-receive-amount dominant">
             {hidden ? '••••••' : money(outstanding, t('currencyLabel'))}
           </bdi>
         </div>
 
-        <div className="hero-divider" aria-hidden="true" />
-
-        <div className="hero-col hero-col-pay">
-          <span className="hero-col-label">{t('payable')}</span>
-          <bdi dir="ltr" className="hero-col-amount">
+        {/* Secondary "To pay" */}
+        <div className="hero-pay-row">
+          <span className="hero-pay-label">{t('payable')}</span>
+          <bdi dir="ltr" className="hero-pay-amount">
             {hidden ? '••••••' : money(payable, t('currencyLabel'))}
           </bdi>
         </div>

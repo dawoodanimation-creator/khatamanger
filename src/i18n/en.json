@@ -167,5 +167,6 @@
   "remindShort": "Remind",
   "owesYouNamed": "{name} owes you",
   "youOweNamed": "You owe {name}",
-  "addFirstCustomer": "Add first customer"
+  "addFirstCustomer": "Add first customer",
+  "overview": "Overview"
 }
