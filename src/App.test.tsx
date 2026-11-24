@@ -91,14 +91,17 @@ describe('complete customer flow', () => {
   });
   test('edit keeps transactions and deletion requires confirmation', async () => {
     const user = userEvent.setup(); open('/customers/ali', seeded());
+    await user.click(screen.getByRole('button', { name: 'More options' }));
     await user.click(screen.getByRole('link', { name: 'Edit' }));
     await user.clear(screen.getByLabelText('Name')); await user.type(screen.getByLabelText('Name'), 'Ali Khan');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('heading', { name: 'Ali Khan' })).toBeTruthy();
     expect(readLedger(localStorage).transactions).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'More options' }));
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
     expect(readLedger(localStorage).customers).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'More options' }));
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(readLedger(localStorage).customers).toEqual([]));

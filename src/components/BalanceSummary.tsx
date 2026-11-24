@@ -13,32 +13,34 @@ export function BalanceSummary({ outstanding, payable, hidden, onToggleHidden }:
   const { t } = useI18n();
 
   return (
-    <section className="outstanding-card" aria-label={t('outstanding')}>
-      <div className="hero-top flex items-center justify-between">
-        <span className="hero-subtitle">{t('overview')}</span>
-        <button
-          type="button"
-          className="hero-icon"
-          aria-label={hidden ? t('showBalances') : t('hideBalances')}
-          onClick={onToggleHidden}
-        >
-          {hidden ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-        </button>
-      </div>
-
-      <div className="hero-balance-stack">
-        {/* Dominant "To receive" */}
-        <div className="hero-receive-block">
-          <span className="hero-receive-label">{t('outstanding')}</span>
-          <bdi dir="ltr" className="hero-receive-amount dominant">
+    <section className="outstanding-card summary-minimalist" aria-label={t('overview')}>
+      <div className="summary-columns">
+        {/* "You will get" (To receive) */}
+        <div className="summary-col summary-receive">
+          <div className="summary-col-header">
+            <span className="summary-label">{t('toReceive')}</span>
+            <span className="sr-only">{t('outstanding')}</span>
+          </div>
+          <bdi dir="ltr" className="summary-amount hero-receive-amount dominant amount-receive">
             {hidden ? '••••••' : money(outstanding, t('currencyLabel'))}
           </bdi>
         </div>
 
-        {/* Secondary "To pay" */}
-        <div className="hero-pay-row">
-          <span className="hero-pay-label">{t('payable')}</span>
-          <bdi dir="ltr" className="hero-pay-amount">
+        {/* "You will give" (To pay) */}
+        <div className="summary-col summary-pay">
+          <div className="summary-col-header flex items-center justify-between">
+            <span className="summary-label">{t('toPay')}</span>
+            <span className="sr-only">{t('payable')}</span>
+            <button
+              type="button"
+              className="summary-eye-btn"
+              aria-label={hidden ? t('showBalances') : t('hideBalances')}
+              onClick={onToggleHidden}
+            >
+              {hidden ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            </button>
+          </div>
+          <bdi dir="ltr" className="summary-amount hero-pay-amount amount-pay">
             {hidden ? '••••••' : money(payable, t('currencyLabel'))}
           </bdi>
         </div>

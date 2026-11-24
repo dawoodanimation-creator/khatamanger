@@ -25,43 +25,18 @@
     },
     {
       "screen": "customer-new",
-      "violations": [
-        {
-          "id": "heading-order",
-          "impact": "moderate",
-          "nodes": [
-            {
-              "target": [
-                "h3"
-              ],
-              "summary": "Fix any of the following:\n  Heading order invalid"
-            }
-          ]
-        }
-      ],
+      "violations": [],
       "incomplete": []
     },
     {
       "screen": "credit",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "nodes": 2
-        }
-      ]
+      "incomplete": []
     },
     {
       "screen": "payment",
       "violations": [],
-      "incomplete": [
-        {
-          "id": "color-contrast",
-          "impact": "serious",
-          "nodes": 2
-        }
-      ]
+      "incomplete": []
     },
     {
       "screen": "detail",
@@ -75,20 +50,7 @@
     },
     {
       "screen": "customer-edit",
-      "violations": [
-        {
-          "id": "heading-order",
-          "impact": "moderate",
-          "nodes": [
-            {
-              "target": [
-                "h3"
-              ],
-              "summary": "Fix any of the following:\n  Heading order invalid"
-            }
-          ]
-        }
-      ],
+      "violations": [],
       "incomplete": []
     },
     {

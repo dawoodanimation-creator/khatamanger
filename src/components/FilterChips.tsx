@@ -25,22 +25,24 @@ export function FilterChips({ current, onChange, counts }: FilterChipsProps) {
 
   return (
     <div className="filter-chips-container" role="radiogroup" aria-label="Customer filters">
-      {chips.map(chip => {
-        const isActive = current === chip.id;
-        return (
-          <button
-            key={chip.id}
-            type="button"
-            role="radio"
-            aria-checked={isActive}
-            className={`filter-chip ${isActive ? 'filter-chip-active' : ''}`}
-            onClick={() => onChange(chip.id)}
-          >
-            <span className="filter-chip-label">{chip.label}</span>
-            <span className="filter-chip-badge">{chip.count}</span>
-          </button>
-        );
-      })}
+      <div className="filter-tabs-row">
+        {chips.map(chip => {
+          const isActive = current === chip.id;
+          return (
+            <button
+              key={chip.id}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              className={`filter-chip filter-tab ${isActive ? 'filter-chip-active' : ''}`}
+              onClick={() => onChange(chip.id)}
+            >
+              <span className="filter-chip-label">{chip.label}</span>
+              <span className="filter-chip-count">{chip.count}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Search, UserPlus, X, Filter } from 'lucide-react';
+import { Search, UserPlus, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { ReviewControls } from '../components/ReviewControls';
 import { Header } from '../components/Header';
-import { LedgerIllustration } from '../components/LedgerIllustration';
 import { BalanceSummary } from '../components/BalanceSummary';
 import { FilterChips, type CustomerFilter } from '../components/FilterChips';
 import { CustomerCard } from '../components/CustomerCard';
@@ -22,7 +21,10 @@ export function Home() {
   const hidden = !!ledger.settings.hideBalances;
 
   const sorted = useMemo(
-    () => [...ledger.customers].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
+    () =>
+      [...ledger.customers].sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      ),
     [ledger.customers]
   );
 
@@ -43,7 +45,10 @@ export function Home() {
     const search = query.trim().toLowerCase();
     return sorted.filter(c => {
       // 1. Search text match
-      const matchesSearch = !search || c.name.toLowerCase().includes(search) || phoneMatches(c.phone, search);
+      const matchesSearch =
+        !search ||
+        c.name.toLowerCase().includes(search) ||
+        phoneMatches(c.phone, search);
       if (!matchesSearch) return false;
 
       // 2. Filter status match
@@ -55,7 +60,10 @@ export function Home() {
     });
   }, [sorted, query, filter, index.balances]);
 
-  const matchesSet = useMemo(() => new Set(matchingCustomers.map(c => c.id)), [matchingCustomers]);
+  const matchesSet = useMemo(
+    () => new Set(matchingCustomers.map(c => c.id)),
+    [matchingCustomers]
+  );
 
   function clearSearchAndFilter() {
     setQuery('');
@@ -69,7 +77,7 @@ export function Home() {
       <Header title={t('app')} home />
 
       <div className="page-content home-content">
-        {/* P0-2: Hero Balance Summary (2 equal columns, no carousel dots, toggle hides both) */}
+        {/* Minimalist Summary: Plain white area, 2 big numbers side by side */}
         <BalanceSummary
           outstanding={index.outstanding}
           payable={index.payable}
@@ -77,15 +85,16 @@ export function Home() {
           onToggleHidden={() => updateSettings({ hideBalances: !hidden })}
         />
 
-        {/* P1-9 & P1-4: Refined Search Bar */}
-        <div className="search-field flex items-center gap-3">
-          <Search aria-hidden="true" className="search-icon" />
+        {/* Search Bar: Single row, light grey fill, 48px high */}
+        <div className="search-field flex items-center gap-2">
+          <Search aria-hidden="true" className="search-icon" size={18} />
           <input
             type="search"
             value={query}
             onChange={e => setQuery(e.target.value)}
             aria-label={t('search')}
             placeholder={t('search')}
+            className="search-input-minimal"
           />
           {query && (
             <button
@@ -94,47 +103,45 @@ export function Home() {
               aria-label="Clear search"
               onClick={() => setQuery('')}
             >
-              <X aria-hidden="true" />
+              <X size={16} aria-hidden="true" />
             </button>
           )}
         </div>
 
-        {/* P1-7: Filter Chips (All / To receive / To pay / Settled) */}
+        {/* Filters: Simple underlined text tabs */}
         {ledger.customers.length > 0 && (
-          <FilterChips
-            current={filter}
-            onChange={setFilter}
-            counts={counts}
-          />
+          <FilterChips current={filter} onChange={setFilter} counts={counts} />
         )}
 
-        {/* Heading & Count badge */}
+        {/* Customer List Header & Counts */}
         <div className="section-heading flex items-center justify-between">
-          <h2>{t('customers')}</h2>
-          <span className="count-badge" aria-label={`${matchingCustomers.length} ${t('customers')}`}>
+          <h2 className="section-title">{t('customers')}</h2>
+          <span
+            className="count-text"
+            aria-label={`${matchingCustomers.length} ${t('customers')}`}
+          >
             {matchingCustomers.length}
           </span>
         </div>
 
-        {/* Empty States (P1-10) */}
+        {/* Empty States */}
         {ledger.customers.length === 0 ? (
-          <div className="empty-state flex flex-col items-center text-center">
-            <LedgerIllustration />
-            <h2>{t('emptyCustomers')}</h2>
-            <p>{t('emptyCustomersBody')}</p>
-            <Link className="button button-primary empty-state-cta" to="/customers/new">
-              <UserPlus aria-hidden="true" />
-              {t('addFirstCustomer')}
+          <div className="empty-state-minimal text-center">
+            <h2 className="empty-state-headline">{t('emptyCustomers')}</h2>
+            <p className="empty-state-subtext">{t('emptyCustomersBody')}</p>
+            <Link
+              className="button button-primary empty-state-cta"
+              to="/customers/new"
+            >
+              <UserPlus size={18} aria-hidden="true" />
+              <span>{t('addFirstCustomer')}</span>
             </Link>
             <ReviewControls compact />
           </div>
         ) : matchingCustomers.length === 0 ? (
-          <div className="empty-state filter-empty-state flex flex-col items-center text-center">
-            <div className="filter-empty-icon" aria-hidden="true">
-              <Filter />
-            </div>
-            <h2>{t('noMatches')}</h2>
-            <p>{t('noFilterMatches')}</p>
+          <div className="empty-state-minimal text-center">
+            <h2 className="empty-state-headline">{t('noMatches')}</h2>
+            <p className="empty-state-subtext">{t('noFilterMatches')}</p>
             {hasFilterOrSearch && (
               <button
                 type="button"
@@ -146,11 +153,14 @@ export function Home() {
             )}
           </div>
         ) : (
-          <div className="customer-list">
+          <div className="customer-list customer-rows-list">
             {sorted.map(customer => {
               const balance = index.balances.get(customer.id) ?? 0;
               const history = index.histories.get(customer.id);
-              const latestTx = history && history.length > 0 ? history[history.length - 1].transaction : null;
+              const latestTx =
+                history && history.length > 0
+                  ? history[history.length - 1].transaction
+                  : null;
 
               return (
                 <div
@@ -170,11 +180,14 @@ export function Home() {
         )}
       </div>
 
-      {/* Fixed bottom bar with soft fade-out above (P0-1) */}
+      {/* Fixed Full-Width Bottom Bar with Soft Fade Above */}
       <div className="home-actions">
-        <Link className="button button-primary" to="/customers/new">
-          <UserPlus aria-hidden="true" />
-          {t('addCustomer')}
+        <Link
+          className="button button-primary add-customer-main-btn"
+          to="/customers/new"
+        >
+          <UserPlus size={18} aria-hidden="true" />
+          <span>{t('addCustomer')}</span>
         </Link>
       </div>
     </>

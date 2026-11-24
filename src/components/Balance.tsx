@@ -18,7 +18,12 @@ export function Balance({ paisa, forceShow, customerName }: BalanceProps) {
   const isPayable = paisa < 0;
   const isSettled = paisa === 0;
 
-  const label = t(isOwed ? 'owesYou' : isPayable ? 'youOwe' : 'settled');
+  const relationText = customerName && !isSettled
+    ? t(isOwed ? 'owesYouNamed' : 'youOweNamed', { name: customerName })
+    : t(isOwed ? 'owesYou' : isPayable ? 'youOwe' : 'settled');
+
+  const baseRelationText = t(isOwed ? 'owesYou' : isPayable ? 'youOwe' : 'settled');
+
   const Icon = isOwed ? ArrowDownLeft : isPayable ? ArrowUpRight : Check;
 
   const statusClass = isOwed
@@ -34,8 +39,10 @@ export function Balance({ paisa, forceShow, customerName }: BalanceProps) {
       </bdi>
       <span className="balance-direction">
         <Icon aria-hidden="true" />
-        <span>{label}</span>
-        {customerName && !isSettled && <span className="balance-name-suffix"> {customerName}</span>}
+        <span>{relationText}</span>
+        {customerName && !isSettled && (
+          <span className="sr-only">{baseRelationText}</span>
+        )}
       </span>
     </div>
   );

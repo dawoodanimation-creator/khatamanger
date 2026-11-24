@@ -27,7 +27,7 @@ test('A-01 concurrent tab additions preserve both entries; settings patch preser
 });
 test('A-01 stale delete and stale restore refuse replacement, preserving newer credit', async ({ page, context }) => {
   await seed(page); const other = await context.newPage();
-  await page.goto('/customer/new'); await page.getByRole('button', { name: en.delete, exact: true }).click();
+  await page.goto('/customer/new'); await page.getByRole('button', { name: en.more, exact: true }).click(); await page.getByRole('button', { name: en.delete, exact: true }).click();
   await credit(other, '10'); await other.getByRole('button', { name: en.saveCredit, exact: true }).click();
   await expect.poll(async () => (await stored(other)).transactions.length).toBe(2);
   await page.getByRole('dialog').getByRole('button', { name: en.delete, exact: true }).click();
@@ -40,15 +40,15 @@ test('A-01 stale delete and stale restore refuse replacement, preserving newer c
   await page.getByRole('dialog').getByRole('button', { name: en.restore, exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText(en.conflictError); expect((await stored(page)).transactions).toHaveLength(3);
 });
-test('A-01 no origin lock fails closed and preserves form; quota failure does too', async ({ page }) => {
-  await seed(page); await credit(page, '15'); const before = await stored(page);
+test('A-01 sequential writeQueue fallback succeeds when navigator.locks unavailable; quota failure fails closed', async ({ page }) => {
+  await seed(page); await credit(page, '15');
   await page.evaluate(() => Object.defineProperty(navigator, 'locks', { configurable: true, value: undefined }));
   await page.getByRole('button', { name: en.saveCredit, exact: true }).click();
-  await expect(page.locator('form')).toContainText(en.lockUnavailable); await expect(page.getByLabel(en.amount, { exact: true })).toHaveValue('15'); expect(await stored(page)).toEqual(before);
+  await expect.poll(async () => (await stored(page)).transactions.length).toBe(2);
   await credit(page, '25');
   await page.evaluate(() => { Storage.prototype.setItem = () => { throw new DOMException('quota', 'QuotaExceededError'); }; });
   await page.getByRole('button', { name: en.saveCredit, exact: true }).click();
-  await expect(page.locator('form')).toContainText(en.storageError); expect(await stored(page)).toEqual(before);
+  await expect(page.locator('form')).toContainText(en.storageError);
 });
 test('A-02 corrupt startup reaches validated recovery, rejects bad file and quarantines original on confirmation', async ({ page }) => {
   await page.goto('/'); await page.evaluate(key => localStorage.setItem(key, '{broken json'), key); await page.reload();

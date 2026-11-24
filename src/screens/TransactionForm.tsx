@@ -1,17 +1,12 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { useMemo, useRef, useState, useEffect, type FormEvent } from 'react';
+import { useNavigate, useParams, Link } from 'react-router';
 import {
   CalendarDays,
   Check,
   Plus,
-  ShoppingBag,
   Trash2,
   Clock,
-  ArrowUpRight,
-  ArrowDownLeft,
-  ChevronDown,
-  ChevronUp,
-  X
+  X,
 } from 'lucide-react';
 import { Balance } from '../components/Balance';
 import { balanceFor, exactAdd } from '../utils/balance';
@@ -25,7 +20,7 @@ import { newId } from '../utils/ids';
 import { customerPath } from '../utils/routes';
 import { parseAmount } from '../utils/money';
 import { todayISO, validEntryDate } from '../utils/dates';
-import { getInitials, getAvatarColorIndex } from '../utils/avatar';
+import { getInitials } from '../utils/avatar';
 
 export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const { customerId } = useParams();
@@ -37,14 +32,19 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayISO());
   const [showCustomDate, setShowCustomDate] = useState(false);
+
   const [dueDate, setDueDate] = useState('');
   const [showDueDate, setShowDueDate] = useState(false);
+
   const [note, setNote] = useState('');
-  const [noteFocused, setNoteFocused] = useState(false);
+  const [showNote, setShowNote] = useState(false);
+
   const [showItems, setShowItems] = useState(false);
   const [items, setItems] = useState<
     Array<{ id: string; name: string; qty: string; price: string }>
   >([]);
+
+  const [viewportBottom, setViewportBottom] = useState(0);
 
   const [errors, setErrors] = useState<
     Partial<Record<'amount' | 'date' | 'note', TranslationKey>>
@@ -56,13 +56,29 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const saving = useRef(false);
   const transactionId = useRef<string | null>(null);
 
+  // Keep Save bar above mobile keyboard using visualViewport
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    function handleResize() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      const offset = window.innerHeight - (vv.height + vv.offsetTop);
+      setViewportBottom(Math.max(0, offset));
+    }
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
+
   if (!customer) return <MissingCustomer />;
 
   const backTo = customerPath(customer.id);
   const credit = kind === 'credit';
   const currentBalance = balanceFor(ledger, customer.id);
   const initials = getInitials(customer.name);
-  const colorIndex = getAvatarColorIndex(customer.name);
 
   // Compute projected balance
   const previewAmount = parseAmount(amount);
@@ -92,7 +108,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           'Milk',
           'Rice',
           'Lentils',
-          'Soap'
+          'Soap',
         ];
 
   function addItem(suggestedName = '') {
@@ -100,22 +116,27 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
     setItems(prev => [...prev, { id: newId(), name: suggestedName, qty: '', price: '' }]);
   }
 
-  function updateItem(id: string, field: 'name' | 'qty' | 'price', val: string) {
-    setItems(prev => prev.map(item => (item.id === id ? { ...item, [field]: val } : item)));
+  function removeItem(id: string) {
+    setItems(prev => prev.filter(i => i.id !== id));
   }
 
-  function removeItem(id: string) {
-    setItems(prev => prev.filter(item => item.id !== id));
+  function updateItem(id: string, field: 'name' | 'qty' | 'price', val: string) {
+    setItems(prev =>
+      prev.map(i => (i.id === id ? { ...i, [field]: val } : i))
+    );
   }
 
   const itemsTotalPaisa = useMemo(() => {
-    return items.reduce((sum, item) => sum + (parseAmount(item.price) ?? 0), 0);
+    return items.reduce((acc, curr) => {
+      const p = parseAmount(curr.price);
+      return p ? acc + p : acc;
+    }, 0);
   }, [items]);
 
   function handleQuickAmount(addValue: number) {
-    const current = parseFloat(amount.replace(/,/g, '')) || 0;
-    const next = (current + addValue).toFixed(2).replace(/\.00$/, '');
-    setAmount(next);
+    const currentVal = parseAmount(amount) ?? 0;
+    const nextVal = currentVal + addValue * 100;
+    setAmount((nextVal / 100).toFixed(2));
     if (errors.amount) {
       setErrors(prev => ({ ...prev, amount: undefined }));
     }
@@ -151,7 +172,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           id: i.id,
           name: i.name.trim(),
           qty: i.qty.trim() || undefined,
-          pricePaisa: parseAmount(i.price) ?? undefined
+          pricePaisa: parseAmount(i.price) ?? undefined,
         }));
 
       const saved = await addTransaction(
@@ -164,7 +185,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           createdAt: new Date().toISOString(),
           note: note.trim(),
           ...(validItems.length ? { items: validItems } : {}),
-          ...(dueDate ? { dueDate } : {})
+          ...(dueDate ? { dueDate } : {}),
         },
         expectedCustomer.current!
       );
@@ -183,45 +204,29 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
     <>
       <Header title={t(credit ? 'credit' : 'payment')} backTo={backTo} />
 
-      <form noValidate onSubmit={submit} className="page-content form-content transaction-form-page">
-        {/* Neutral Customer Context Card */}
-        <div className="transaction-customer-card transaction-help">
-          <div className="customer-context-top">
-            <div
-              className={`customer-avatar avatar-color-${colorIndex}`}
-              aria-hidden="true"
-            >
+      <form
+        noValidate
+        onSubmit={submit}
+        className="page-content form-content transaction-form-page"
+      >
+        {/* Single quiet line: avatar, customer name, current balance (no colored banner) */}
+        <div className="transaction-customer-quiet-line transaction-help flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="customer-avatar avatar-neutral avatar-sm" aria-hidden="true">
               {initials}
             </div>
-            <div className="customer-context-identity">
-              <strong className="customer-context-name" dir="auto">
-                {customer.name}
-              </strong>
-              <span className="customer-context-phone" dir="ltr">
-                <bdi>{customer.phone}</bdi>
-              </span>
-            </div>
-            <div className="customer-context-balance">
-              <span className="context-balance-label">{t('balance')}</span>
-              <Balance paisa={currentBalance} />
-            </div>
+            <strong className="customer-line-name truncate" dir="auto">
+              {customer.name}
+            </strong>
+            <span className="sr-only">{customer.phone}</span>
           </div>
-
-          <div
-            className={`customer-context-helper ${
-              credit ? 'credit-helper' : 'payment-helper'
-            }`}
-          >
-            <span className="helper-icon" aria-hidden="true">
-              {credit ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
-            </span>
-            <span>
-              {t(credit ? 'addsToOwed' : 'reducesOwed', { name: customer.name })}
-            </span>
+          <div className="customer-line-balance">
+            <span className="balance-label-quiet">{t('balance')}: </span>
+            <Balance paisa={currentBalance} />
           </div>
         </div>
 
-        {/* Big Amount Input */}
+        {/* Big Amount Input Field */}
         <div className="form-field amount-field-block">
           <label htmlFor="transaction-amount" className="amount-label">
             {t('amount')}
@@ -264,8 +269,12 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
             </p>
           )}
 
-          {/* Quick Amount Buttons */}
-          <div className="quick-amount-chips" role="group" aria-label="Quick amount shortcuts">
+          {/* Quick Amount Chips as plain outlined text chips */}
+          <div
+            className="quick-amount-chips"
+            role="group"
+            aria-label="Quick amount shortcuts"
+          >
             <button
               type="button"
               className="quick-amount-chip"
@@ -297,7 +306,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           </div>
         </div>
 
-        {/* Quick Date Chips */}
+        {/* Date Options (Three simple options: Today / Yesterday / Pick date) */}
         <div className="form-field date-field-block">
           <label htmlFor="transaction-date" className="date-field-label">
             <CalendarDays size={16} aria-hidden="true" />
@@ -307,7 +316,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           <div className="date-shortcuts-row">
             <button
               type="button"
-              className={`date-chip ${date === todayStr ? 'active' : ''}`}
+              className={`date-chip ${date === todayStr && !showCustomDate ? 'active' : ''}`}
               onClick={() => {
                 setDate(todayStr);
                 setShowCustomDate(false);
@@ -315,10 +324,9 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
             >
               {t('today')}
             </button>
-
             <button
               type="button"
-              className={`date-chip ${date === yesterdayStr ? 'active' : ''}`}
+              className={`date-chip ${date === yesterdayStr && !showCustomDate ? 'active' : ''}`}
               onClick={() => {
                 setDate(yesterdayStr);
                 setShowCustomDate(false);
@@ -326,167 +334,143 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
             >
               {t('yesterday')}
             </button>
-
             <button
               type="button"
-              className={`date-chip ${
-                showCustomDate || (date !== todayStr && date !== yesterdayStr)
-                  ? 'active'
-                  : ''
-              }`}
-              onClick={() => setShowCustomDate(prev => !prev)}
+              className={`date-chip ${showCustomDate || (date !== todayStr && date !== yesterdayStr) ? 'active' : ''}`}
+              onClick={() => setShowCustomDate(true)}
             >
               {t('pickDate')}
             </button>
           </div>
 
-          {/* Native picker: visible if Pick Date is active or custom date selected */}
           {(showCustomDate || (date !== todayStr && date !== yesterdayStr)) && (
-            <div className="custom-date-picker-wrapper">
-              <input
-                id="transaction-date"
-                type="date"
-                value={date}
-                min="1900-01-01"
-                max={todayISO()}
-                onChange={e => {
-                  setDate(e.target.value);
-                  if (errors.date) setErrors(prev => ({ ...prev, date: undefined }));
-                }}
-                aria-invalid={!!errors.date}
-                aria-describedby={errors.date ? 'date-error' : undefined}
-                disabled={busy}
-              />
-            </div>
-          )}
-
-          {/* Hidden fallback for test accessibility if date picker is not expanded */}
-          {!showCustomDate && date === todayStr && (
             <input
               id="transaction-date"
-              type="date"
+              className="custom-date-input"
               value={date}
-              min="1900-01-01"
-              max={todayISO()}
-              onChange={e => setDate(e.target.value)}
-              className="sr-only"
-              tabIndex={-1}
-              aria-label={t('date')}
+              onChange={e => {
+                setDate(e.target.value);
+                if (errors.date) setErrors(prev => ({ ...prev, date: undefined }));
+              }}
+              type="date"
+              aria-invalid={!!errors.date}
+              aria-describedby={errors.date ? 'transaction-date-error' : undefined}
+              disabled={busy}
             />
           )}
 
           {errors.date && (
-            <p id="date-error" className="field-error" role="alert">
+            <p id="transaction-date-error" className="field-error" role="alert">
               {t(errors.date)}
             </p>
           )}
         </div>
 
-        {/* Due Date (Credit Only) */}
-        {credit && (
-          <div className="form-field due-date-section">
-            {!showDueDate && !dueDate ? (
-              <button
-                type="button"
-                className="add-due-date-link"
-                onClick={() => setShowDueDate(true)}
-              >
-                <Clock size={14} aria-hidden="true" />
-                <span>+ {t('dueDateOptional')}</span>
-              </button>
-            ) : (
-              <div className="due-date-picker-card">
-                <div className="due-date-header">
-                  <label
-                    htmlFor="transaction-due-date"
-                    className="flex items-center gap-2"
-                  >
-                    <Clock size={15} aria-hidden="true" />
-                    <span>{t('dueDate')}</span>
-                  </label>
-                  <button
-                    type="button"
-                    className="remove-due-date-btn"
-                    onClick={() => {
-                      setDueDate('');
-                      setShowDueDate(false);
-                    }}
-                    aria-label="Remove due date"
-                  >
-                    <X size={15} aria-hidden="true" />
-                  </button>
-                </div>
-                <input
-                  id="transaction-due-date"
-                  type="date"
-                  value={dueDate}
-                  min={todayISO()}
-                  onChange={e => setDueDate(e.target.value)}
-                  disabled={busy}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Purchase Items Details (Credit Only, Collapsed by default) */}
-        {credit && (
-          <section className="items-section-card" aria-label={t('itemsDetails')}>
+        {/* Collapsed Options (+ Add due date, + Add items, + Add note) */}
+        <div className="form-collapsed-options">
+          {/* Due Date Option */}
+          {!showDueDate && !dueDate ? (
             <button
               type="button"
-              className="items-accordion-trigger"
-              onClick={() => setShowItems(p => !p)}
-              aria-expanded={showItems}
+              className="text-link-quiet"
+              onClick={() => setShowDueDate(true)}
             >
-              <div className="trigger-left">
-                <ShoppingBag size={16} aria-hidden="true" />
-                <span className="trigger-title">{t('itemsDetails')}</span>
-                {items.length > 0 && (
-                  <span className="count-badge">{items.length}</span>
-                )}
-              </div>
-              {showItems ? (
-                <ChevronUp size={16} aria-hidden="true" />
-              ) : (
-                <ChevronDown size={16} aria-hidden="true" />
-              )}
+              <Plus size={15} aria-hidden="true" />
+              <span>{t('dueDate')}</span>
             </button>
+          ) : (
+            <div className="form-field due-date-block">
+              <div className="flex items-center justify-between">
+                <label htmlFor="transaction-due-date" className="text-sm text-muted">
+                  <Clock size={14} aria-hidden="true" />
+                  <span>{t('dueDate')}</span>
+                </label>
+                <button
+                  type="button"
+                  className="icon-button icon-button-sm"
+                  onClick={() => {
+                    setDueDate('');
+                    setShowDueDate(false);
+                  }}
+                  aria-label="Remove due date"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <input
+                id="transaction-due-date"
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                disabled={busy}
+              />
+            </div>
+          )}
 
-            {showItems && (
-              <div className="items-accordion-body">
-                <div className="item-chips-scroll">
-                  {commonItems.map(name => (
-                    <button
-                      key={name}
-                      type="button"
-                      className="item-chip"
-                      onClick={() => addItem(name)}
-                    >
-                      + {name}
-                    </button>
-                  ))}
-                </div>
+          {/* Items Breakdown Option (Credit only) */}
+          {credit && !showItems && items.length === 0 ? (
+            <button
+              type="button"
+              className="text-link-quiet"
+              onClick={() => addItem()}
+            >
+              <Plus size={15} aria-hidden="true" />
+              <span>{t('items')}</span>
+            </button>
+          ) : credit && (
+            <section className="items-section-block">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t('items')}</span>
+                <button
+                  type="button"
+                  className="icon-button icon-button-sm"
+                  onClick={() => {
+                    setItems([]);
+                    setShowItems(false);
+                  }}
+                  aria-label="Remove items"
+                >
+                  <X size={14} />
+                </button>
+              </div>
 
+              {/* Suggestions */}
+              <div className="common-items-chips">
+                {commonItems.map(name => (
+                  <button
+                    key={name}
+                    type="button"
+                    className="suggestion-chip"
+                    onClick={() => addItem(name)}
+                  >
+                    + {name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Item Rows */}
+              <div className="items-list-container">
                 {items.map(item => (
-                  <div key={item.id} className="item-card">
-                    <div className="flex items-center justify-between gap-2">
+                  <div key={item.id} className="item-input-card">
+                    <div className="item-input-row">
                       <input
-                        aria-label={t('itemName')}
-                        placeholder={t('itemNamePlaceholder')}
+                        className="item-name-input"
+                        placeholder={t('itemName')}
                         value={item.name}
                         onChange={e => updateItem(item.id, 'name', e.target.value)}
                         disabled={busy}
                       />
                       <button
                         type="button"
-                        className="item-remove-btn"
-                        aria-label={t('removeItem')}
+                        className="icon-button item-remove-btn"
                         onClick={() => removeItem(item.id)}
+                        aria-label="Remove item"
                       >
-                        <Trash2 size={16} aria-hidden="true" />
+                        <Trash2 size={16} />
                       </button>
                     </div>
-                    <div className="item-fields">
+
+                    <div className="item-meta-inputs-row">
                       <input
                         aria-label={t('qty')}
                         placeholder={t('qtyPlaceholder')}
@@ -526,31 +510,52 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
                   </button>
                 )}
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
 
-        {/* Note Field (Expands on focus) */}
-        <div className="form-field note-field-block">
-          <label htmlFor="transaction-note">{t('note')}</label>
-          <textarea
-            id="transaction-note"
-            className="expandable-note-input"
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            onFocus={() => setNoteFocused(true)}
-            onBlur={() => setNoteFocused(false)}
-            maxLength={500}
-            rows={noteFocused || note.length > 0 ? 3 : 1}
-            placeholder={t('note')}
-            aria-invalid={!!errors.note}
-            aria-describedby={errors.note ? 'transaction-note-error' : undefined}
-            disabled={busy}
-          />
-          {errors.note && (
-            <p id="transaction-note-error" className="field-error" role="alert">
-              {t(errors.note)}
-            </p>
+          {/* Note Option */}
+          {!showNote && !note ? (
+            <button
+              type="button"
+              className="text-link-quiet"
+              onClick={() => setShowNote(true)}
+            >
+              <Plus size={15} aria-hidden="true" />
+              <span>{t('note')}</span>
+            </button>
+          ) : (
+            <div className="form-field note-field-block">
+              <div className="flex items-center justify-between">
+                <label htmlFor="transaction-note">{t('note')}</label>
+                {!note && (
+                  <button
+                    type="button"
+                    className="icon-button icon-button-sm"
+                    onClick={() => setShowNote(false)}
+                    aria-label="Remove note"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <textarea
+                id="transaction-note"
+                className="expandable-note-input"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                maxLength={500}
+                rows={2}
+                placeholder="Add a note"
+                aria-invalid={!!errors.note}
+                aria-describedby={errors.note ? 'transaction-note-error' : undefined}
+                disabled={busy}
+              />
+              {errors.note && (
+                <p id="transaction-note-error" className="field-error" role="alert">
+                  {t(errors.note)}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -560,25 +565,26 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           </p>
         )}
 
-        {/* Sticky Bottom Action Bar with Balance Projection */}
-        <div className="transaction-form-sticky-bar">
-          <div className="sticky-balance-preview-box money-review">
-            {previewAmount !== null && (
+        {/* Sticky Bottom Action Bar (Aligned with page margins; New balance only when amount exists) */}
+        <div
+          className="transaction-form-sticky-bar"
+          style={{ bottom: viewportBottom ? `${viewportBottom}px` : undefined }}
+        >
+          {previewAmount !== null && (
+            <div className="sticky-balance-preview-box money-review">
               <span className="sr-only">
                 {money(previewAmount, t('currencyLabel'))}
               </span>
-            )}
-            <span className="preview-label">{t('newBalance')}:</span>
-            <strong className="preview-balance-value">
-              {projected === null && previewAmount !== null ? (
-                <span className="field-error text-xs">{t('balanceRangeError')}</span>
-              ) : projected !== null ? (
-                money(projected, t('currencyLabel'))
-              ) : (
-                '—'
-              )}
-            </strong>
-          </div>
+              <span className="preview-label">{t('newBalance')}:</span>
+              <strong className="preview-balance-value">
+                {projected === null ? (
+                  <span className="field-error text-xs">{t('balanceRangeError')}</span>
+                ) : (
+                  money(projected, t('currencyLabel'))
+                )}
+              </strong>
+            </div>
+          )}
 
           <div className="form-actions sticky-actions">
             <button

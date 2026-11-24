@@ -54,6 +54,7 @@ for (const config of configurations) {
       }
       await page.goto('/customers/demo-ali');
       await expect(page.getByRole('region', { name: strings.remind, exact: true })).toBeVisible();
+      await page.getByRole('button', { name: strings.more, exact: true }).click();
       await page.getByRole('button', { name: strings.delete, exact: true }).click();
       const modal = page.getByRole('dialog');
       await expect(modal).toBeVisible();
@@ -61,7 +62,7 @@ for (const config of configurations) {
       await expect(modal.getByRole('button', { name: strings.cancel, exact: true })).toBeFocused();
       await page.keyboard.press('Escape');
       await expect(modal).not.toBeVisible();
-      await expect(page.getByRole('button', { name: strings.delete, exact: true })).toBeFocused();
+      await expect(page.getByRole('button', { name: strings.more, exact: true })).toBeFocused();
       expect(failures).toEqual([]);
     });
   });

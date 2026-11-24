@@ -15,8 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   ShoppingBag,
-  Eye,
-  EyeOff
+  Send,
 } from 'lucide-react';
 import type { Ledger } from '../models/ledger';
 import { CustomerContext } from '../components/CustomerContext';
@@ -24,6 +23,8 @@ import { Header } from '../components/Header';
 import { Balance } from '../components/Balance';
 import { MissingCustomer } from '../components/MissingCustomer';
 import { Modal } from '../components/Modal';
+import { BottomSheet } from '../components/BottomSheet';
+import { MoreMenu } from '../components/MoreMenu';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
 import { balanceFor, runningHistoryFor } from '../utils/balance';
@@ -32,7 +33,7 @@ import { localDate, monthYearLabel } from '../utils/dates';
 import { customerPath } from '../utils/routes';
 import { reminderMessage, reminderLink } from '../utils/reminders';
 import { printCustomerStatement } from '../utils/statement';
-import { getInitials, getAvatarColorIndex } from '../utils/avatar';
+import { getInitials } from '../utils/avatar';
 
 export function CustomerDetail() {
   const { customerId } = useParams();
@@ -42,18 +43,19 @@ export function CustomerDetail() {
   const navigate = useNavigate();
 
   const [dialog, setDialog] = useState<'delete' | null>(null);
+  const [showReminderSheet, setShowReminderSheet] = useState(false);
   const deleteSnapshot = useRef<Ledger>(ledger);
   const removing = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // UI state
-  const [showReminderText, setShowReminderText] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  // Group transactions by month
   const balance = customer ? balanceFor(ledger, customer.id) : 0;
-  const history = useMemo(() => customer ? runningHistoryFor(ledger, customer.id).reverse() : [], [ledger, customer]);
+  const history = useMemo(
+    () => (customer ? runningHistoryFor(ledger, customer.id).reverse() : []),
+    [ledger, customer]
+  );
 
   const groupedHistory = useMemo(() => {
     if (!customer) return [];
@@ -74,8 +76,8 @@ export function CustomerDetail() {
   if (!customer) return <MissingCustomer />;
 
   const initials = getInitials(customer.name);
-  const colorIndex = getAvatarColorIndex(customer.name);
   const whatsapp = reminderLink(customer, balance, true);
+  const sms = reminderLink(customer, balance, false);
 
   function toggleItemExpand(id: string) {
     setExpandedItems(prev => {
@@ -105,6 +107,32 @@ export function CustomerDetail() {
     setDialog(value);
   }
 
+  const moreMenuItems = [
+    {
+      label: t('edit'),
+      icon: <Edit3 size={16} />,
+      to: customerPath(customer.id, 'edit'),
+    },
+    {
+      label: t('downloadStatement'),
+      icon: <FileText size={16} />,
+      onClick: () =>
+        printCustomerStatement(
+          customer,
+          runningHistoryFor(ledger, customer.id),
+          balance,
+          t('currencyLabel'),
+          language === 'ur'
+        ),
+    },
+    {
+      label: t('delete'),
+      icon: <Trash2 size={16} />,
+      danger: true,
+      onClick: () => openDialog('delete'),
+    },
+  ];
+
   return (
     <>
       <Header
@@ -112,65 +140,24 @@ export function CustomerDetail() {
         backTo="/"
         actions={
           <div className="header-actions-group">
-            <button
-              type="button"
-              className="icon-button"
-              aria-label={t('downloadStatement')}
-              title={t('downloadStatement')}
-              onClick={() =>
-                printCustomerStatement(
-                  customer,
-                  runningHistoryFor(ledger, customer.id),
-                  balance,
-                  t('currencyLabel'),
-                  language === 'ur'
-                )
-              }
-            >
-              <FileText size={19} />
-            </button>
-
-            <Link
-              className="icon-button"
-              to={customerPath(customer.id, 'edit')}
-              aria-label={t('edit')}
-              title={t('edit')}
-            >
-              <Edit3 size={19} />
-            </Link>
-
-            <div className="header-action-divider" aria-hidden="true" />
-
-            <button
-              type="button"
-              className="icon-button delete-action-btn"
-              aria-label={t('delete')}
-              title={t('delete')}
-              onClick={() => openDialog('delete')}
-            >
-              <Trash2 size={19} />
-            </button>
+            <MoreMenu items={moreMenuItems} ariaLabel={t('more')} />
           </div>
         }
       />
 
       <div className="page-content detail-content">
-        {/* Compact Hero Card */}
-        <section className="customer-summary">
-          <div className="customer-summary-top">
-            <div
-              className={`customer-avatar avatar-color-${colorIndex}`}
-              aria-hidden="true"
-            >
+        {/* Top Block: Calm, spacious, no bordered card */}
+        <section className="customer-detail-hero customer-summary">
+          <div className="customer-hero-top">
+            <div className="customer-avatar avatar-neutral" aria-hidden="true">
               {initials}
             </div>
 
-            <div className="customer-summary-identity">
-              <strong className="customer-summary-name" dir="auto">
+            <div className="customer-hero-identity">
+              <strong className="customer-detail-name" dir="auto">
                 {customer.name}
               </strong>
-
-              <div className="customer-summary-phone-line">
+              <div className="customer-detail-phone-line">
                 <span className="customer-phone" dir="ltr">
                   <bdi>{customer.phone}</bdi>
                 </span>
@@ -187,101 +174,84 @@ export function CustomerDetail() {
             </div>
           </div>
 
-          <div className="detail-balance">
-            <span className="summary-label">{t('balance')}</span>
+          <div className="detail-balance-block">
+            <span className="detail-balance-label">{t('balance')}</span>
             <Balance paisa={balance} customerName={customer.name} />
           </div>
 
           {customer.note && (
-            <p className="customer-note customer-note-line">
+            <p className="customer-note customer-note-minimal">
               {customer.note}
             </p>
           )}
 
-          {/* Compact Reminder Row (Only when customer owes money) */}
-          {balance > 0 && (
-            <section className="reminder-section" aria-label={t('remind')}>
-              <div className="reminder-compact-row">
-                <div className="reminder-header-group">
-                  <span className="reminder-label">{t('remind')}</span>
-                  <button
-                    type="button"
-                    className="reminder-view-toggle"
-                    onClick={() => setShowReminderText(p => !p)}
-                    aria-expanded={showReminderText}
-                  >
-                    {showReminderText ? <EyeOff size={13} /> : <Eye size={13} />}
-                    <span>{t(showReminderText ? 'hideMessage' : 'viewMessage')}</span>
-                  </button>
-                </div>
-
-                <div className="share-actions-compact">
+          {/* Quick Actions Row (Call, WhatsApp, SMS) */}
+          <div className="customer-hero-actions-row">
+            {balance > 0 && (
+              <section className="reminder-section" aria-label={t('remind')}>
+                <div className="customer-hero-actions-group">
                   {whatsapp ? (
                     <a
-                      className="reminder-action-btn wa-btn"
+                      className="action-pill-btn action-pill-whatsapp"
                       href={whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={t('whatsapp')}
-                      title={t('whatsapp')}
                     >
                       <MessageCircle size={16} aria-hidden="true" />
                       <span>{t('whatsapp')}</span>
                     </a>
                   ) : (
                     <button
-                      className="reminder-action-btn wa-btn"
+                      className="action-pill-btn action-pill-whatsapp"
                       type="button"
                       onClick={() => setError(t('invalidWhatsApp'))}
                       aria-label={t('whatsapp')}
-                      title={t('whatsapp')}
                     >
                       <MessageCircle size={16} aria-hidden="true" />
                       <span>{t('whatsapp')}</span>
                     </button>
                   )}
 
-                  <a
-                    className="reminder-action-btn sms-btn"
-                    href={reminderLink(customer, balance, false)!}
-                    aria-label={t('sms')}
-                    title={t('sms')}
+                  {sms && (
+                    <a
+                      className="action-pill-btn action-pill-sms"
+                      href={sms}
+                      aria-label={t('sms')}
+                    >
+                      <MessageSquare size={16} aria-hidden="true" />
+                      <span>{t('sms')}</span>
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    className="action-pill-btn action-pill-reminder"
+                    onClick={() => setShowReminderSheet(true)}
+                    aria-label={t('remind')}
                   >
-                    <MessageSquare size={16} aria-hidden="true" />
-                    <span>{t('sms')}</span>
-                  </a>
+                    <Send size={15} aria-hidden="true" />
+                    <span>{t('remind')}</span>
+                  </button>
                 </div>
-              </div>
 
-              {/* Expandable Message Box */}
-              <div className={`reminder-accordion ${showReminderText ? 'expanded' : ''}`}>
-                <p className="reminder-message" dir="ltr">
+                <div className="sr-only reminder-message">
                   {reminderMessage(customer, balance)}
-                </p>
-                <p className="muted-copy text-xs">{t('reminderHelp')}</p>
-              </div>
-
-              {error && dialog !== 'delete' && (
-                <p className="field-error" role="alert">
-                  {error}
-                </p>
-              )}
-            </section>
-          )}
+                </div>
+              </section>
+            )}
+          </div>
         </section>
 
-        {/* History Header */}
-        <div className="section-heading flex items-center justify-between">
+        {/* Transaction History Section */}
+        <div className="section-heading history-heading flex items-center justify-between">
           <h2>{t('history')}</h2>
-          <span className="count-badge">{history.length}</span>
+          <span className="count-text">{history.length}</span>
         </div>
 
         {/* Empty History State */}
         {history.length === 0 ? (
           <div className="empty-state text-center">
-            <div className="empty-state-icon" aria-hidden="true">
-              <Clock size={36} />
-            </div>
             <p className="empty-state-text">{t('emptyHistory')}</p>
             <Link
               to={customerPath(customer.id, 'credit')}
@@ -295,8 +265,8 @@ export function CustomerDetail() {
           <div className="transaction-history-container">
             {groupedHistory.map(group => (
               <div key={group.monthKey} className="month-group">
-                <div className="month-sticky-header">
-                  <span className="month-sticky-badge">{group.label}</span>
+                <div className="month-label-row">
+                  <span className="month-label-text">{group.label}</span>
                 </div>
 
                 <ol className="transaction-list">
@@ -306,12 +276,13 @@ export function CustomerDetail() {
                     const itemCount = transaction.items?.length || 0;
 
                     return (
-                      <li className="transaction-card" key={transaction.id}>
-                        <div className="transaction-heading">
+                      <li className="transaction-row-item transaction-card" key={transaction.id}>
+                        <div className="transaction-main-row">
                           <span
                             className={`entry-icon ${
                               isCredit ? 'entry-credit' : 'entry-payment'
                             }`}
+                            aria-hidden="true"
                           >
                             {isCredit ? (
                               <ArrowUpRight size={17} />
@@ -320,22 +291,31 @@ export function CustomerDetail() {
                             )}
                           </span>
 
-                          <div className="entry-title">
-                            <strong>{t(isCredit ? 'credit' : 'payment')}</strong>
-                            <time dateTime={transaction.date}>
+                          <div className="entry-title-col">
+                            <strong className="entry-type-title">
+                              {t(isCredit ? 'credit' : 'payment')}
+                            </strong>
+                            <time dateTime={transaction.date} className="entry-date-text">
                               {localDate(transaction.date, language)}
                             </time>
                           </div>
 
-                          <bdi
-                            dir="ltr"
-                            className={`entry-amount ${
-                              isCredit ? 'balance-owed' : 'balance-payable'
-                            }`}
-                          >
-                            {isCredit ? '+' : '−'}{' '}
-                            {money(transaction.amountPaisa, t('currencyLabel'))}
-                          </bdi>
+                          <div className="entry-amount-col">
+                            <bdi
+                              dir="ltr"
+                              className={`entry-amount ${
+                                isCredit ? 'balance-owed' : 'balance-payable'
+                              }`}
+                            >
+                              {isCredit ? '+' : '−'}{' '}
+                              {money(transaction.amountPaisa, t('currencyLabel'))}
+                            </bdi>
+                            <div className="running-balance-quiet">
+                              <span className="running-amount">
+                                {money(balancePaisa, t('currencyLabel'))}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Collapsible Items Toggle */}
@@ -395,11 +375,6 @@ export function CustomerDetail() {
                         {transaction.note && (
                           <p className="entry-note">{transaction.note}</p>
                         )}
-
-                        <div className="running-balance quiet">
-                          <span className="running-label">{t('running')}</span>
-                          <Balance paisa={balancePaisa} />
-                        </div>
                       </li>
                     );
                   })}
@@ -410,17 +385,17 @@ export function CustomerDetail() {
         )}
       </div>
 
-      {/* Sticky Bottom Action Bar (Side by side in one row) */}
+      {/* Sticky Bottom Action Bar (Equal width, 56px, aligned with page margins) */}
       <div className="transaction-actions side-by-side">
         <Link
-          className="button button-credit-action"
+          className="button button-primary button-credit-action"
           to={customerPath(customer.id, 'credit')}
         >
           <Plus size={18} aria-hidden="true" />
           <span>{t('credit')}</span>
         </Link>
         <Link
-          className="button button-payment-action"
+          className="button button-secondary button-payment-action"
           to={customerPath(customer.id, 'payment')}
         >
           <Banknote size={18} aria-hidden="true" />
@@ -428,7 +403,48 @@ export function CustomerDetail() {
         </Link>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Reminder Message Bottom Sheet */}
+      {showReminderSheet && (
+        <BottomSheet
+          title={t('remind')}
+          onDismiss={() => setShowReminderSheet(false)}
+          actions={
+            <div className="reminder-sheet-actions">
+              {whatsapp && (
+                <a
+                  className="button button-primary"
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowReminderSheet(false)}
+                >
+                  <MessageCircle size={18} aria-hidden="true" />
+                  <span>{t('whatsapp')}</span>
+                </a>
+              )}
+              {sms && (
+                <a
+                  className="button button-secondary"
+                  href={sms}
+                  onClick={() => setShowReminderSheet(false)}
+                >
+                  <MessageSquare size={18} aria-hidden="true" />
+                  <span>{t('sms')}</span>
+                </a>
+              )}
+            </div>
+          }
+        >
+          <div className="reminder-sheet-content">
+            <p className="reminder-sheet-preview-label">{t('reminderHelp')}</p>
+            <div className="reminder-message-box" dir="ltr">
+              {reminderMessage(customer, balance)}
+            </div>
+          </div>
+        </BottomSheet>
+      )}
+
+      {/* Delete Confirmation Modal (Existing modal preserved) */}
       {dialog === 'delete' && (
         <Modal
           title={t('deleteCustomer')}

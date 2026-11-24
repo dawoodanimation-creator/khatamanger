@@ -1,22 +1,21 @@
-import { useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { Check, UserRound, BookUser, AlertTriangle, ExternalLink } from 'lucide-react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useNavigate, useParams, Link } from 'react-router';
+import { Check, BookUser, ExternalLink } from 'lucide-react';
+import { Header } from '../components/Header';
 import { Modal } from '../components/Modal';
 import { CustomerContext } from '../components/CustomerContext';
-import { likelyDuplicates } from '../utils/customerIdentity';
-import { Header } from '../components/Header';
 import { MissingCustomer } from '../components/MissingCustomer';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
 import { newId } from '../utils/ids';
 import { customerPath } from '../utils/routes';
 import { validateCustomer, type CustomerErrors } from '../utils/validation';
-import { getInitials, getAvatarColorIndex } from '../utils/avatar';
+import { likelyDuplicates } from '../utils/customerIdentity';
 
 export function CustomerForm() {
   const { customerId } = useParams();
   const { ledger, saveCustomer, writeError } = useLedger();
-  const existing = ledger.customers.find(c => c.id === customerId);
+  const existing = customerId ? ledger.customers.find(c => c.id === customerId) : undefined;
   const { t } = useI18n();
   const navigate = useNavigate();
 
@@ -31,6 +30,27 @@ export function CustomerForm() {
   const [duplicateReview, setDuplicateReview] = useState<string[] | null>(null);
   const saving = useRef(false);
   const newCustomerId = useRef<string | null>(null);
+  const [viewportBottom, setViewportBottom] = useState(0);
+
+  // Keep Save bar above mobile keyboard using visualViewport
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    function handleResize() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      const offset = window.innerHeight - (vv.height + vv.offsetTop);
+      setViewportBottom(Math.max(0, offset));
+    }
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
+
+  if (customerId && !existing) return <MissingCustomer />;
+  const backTo = existing ? customerPath(existing.id) : '/';
 
   async function pickContact() {
     setError('');
@@ -60,9 +80,6 @@ export function CustomerForm() {
     }
   }
 
-  if (customerId && !existing) return <MissingCustomer />;
-  const backTo = existing ? customerPath(existing.id) : '/';
-
   async function submit(event?: FormEvent, reviewedIds?: string[]) {
     event?.preventDefault();
     if (saving.current) return;
@@ -80,7 +97,7 @@ export function CustomerForm() {
     const duplicateIds = likelyDuplicates(ledger.customers, {
       id: existing?.id ?? '',
       name,
-      phone
+      phone,
     }).map(c => c.id);
 
     if (
@@ -114,9 +131,6 @@ export function CustomerForm() {
     }
   }
 
-  const initials = existing ? getInitials(existing.name) : '';
-  const colorIndex = existing ? getAvatarColorIndex(existing.name) : 0;
-
   return (
     <>
       <Header title={t(existing ? 'editCustomer' : 'addCustomer')} backTo={backTo} />
@@ -126,27 +140,10 @@ export function CustomerForm() {
         onSubmit={event => void submit(event)}
         className="page-content form-content customer-form-page"
       >
-        {/* Top Header Row with Avatar / Icon and Import Contacts */}
-        <div className="customer-form-top-bar">
-          <div className="form-avatar-box">
-            {existing ? (
-              <div
-                className={`customer-avatar avatar-color-${colorIndex}`}
-                aria-hidden="true"
-              >
-                {initials}
-              </div>
-            ) : (
-              <div className="form-symbol" aria-hidden="true">
-                <UserRound size={22} />
-              </div>
-            )}
-            <div className="form-intro-text">
-              <h3>{existing ? existing.name : t('addCustomer')}</h3>
-              <p className="text-xs text-muted">
-                {existing ? t('editCustomer') : t('emptyCustomersBody')}
-              </p>
-            </div>
+        {/* Top Header Row with simple title and Import Contacts */}
+        <div className="customer-form-top-bar flex items-center justify-between min-w-0 w-full gap-3">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <h2 className="text-base font-semibold truncate">{existing ? existing.name : t('addCustomer')}</h2>
           </div>
 
           <button
@@ -160,14 +157,12 @@ export function CustomerForm() {
           </button>
         </div>
 
-        {/* Duplicate Customer Inline Notice */}
-        {duplicateReview && duplicateReview.length > 0 && (
+        {/* Inline Duplicate Notice */}
+        {!existing && duplicateReview && duplicateReview.length > 0 && (
           <div className="duplicate-inline-notice" role="alert">
             <div className="notice-header">
-              <AlertTriangle size={18} className="text-owed" aria-hidden="true" />
-              <strong>{t('duplicateTitle')}</strong>
+              <span>{t('duplicateTitle')}</span>
             </div>
-            <p className="notice-body">{t('duplicateHelp')}</p>
             <div className="duplicate-links">
               {ledger.customers
                 .filter(c => duplicateReview.includes(c.id))
@@ -203,6 +198,7 @@ export function CustomerForm() {
             autoComplete="name"
             autoCapitalize="words"
             autoFocus={!existing}
+            dir="auto"
             placeholder={t('name')}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? 'name-error' : undefined}
@@ -243,7 +239,7 @@ export function CustomerForm() {
           )}
         </div>
 
-        {/* Note Field */}
+        {/* Note Field (Label only, short placeholder per Part B.5) */}
         <div className="form-field">
           <label htmlFor="customer-note">{t('note')}</label>
           <textarea
@@ -256,7 +252,7 @@ export function CustomerForm() {
             }}
             rows={3}
             maxLength={500}
-            placeholder={t('note')}
+            placeholder="Add a note"
             aria-invalid={!!errors.note}
             aria-describedby={errors.note ? 'customer-note-error' : undefined}
             disabled={busy}
@@ -274,8 +270,11 @@ export function CustomerForm() {
           </p>
         )}
 
-        {/* Sticky Save Bar */}
-        <div className="customer-form-sticky-bar">
+        {/* Sticky Save Bar (Aligned with page margins, visualViewport responsive) */}
+        <div
+          className="customer-form-sticky-bar"
+          style={{ bottom: viewportBottom ? `${viewportBottom}px` : undefined }}
+        >
           <div className="form-actions sticky-actions">
             <button className="button button-primary" type="submit" disabled={busy}>
               <Check size={18} aria-hidden="true" />

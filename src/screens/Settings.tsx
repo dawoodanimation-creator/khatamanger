@@ -4,10 +4,6 @@ import {
   Moon,
   Lock,
   Check,
-  ShieldCheck,
-  Palette,
-  HardDrive,
-  Info,
   ChevronDown,
   ChevronUp,
   FlaskConical,
@@ -57,128 +53,118 @@ export function Settings() {
 
       <div className="page-content settings-content">
         {/* Section 1: Appearance */}
-        <section className="settings-group-card">
-          <div className="settings-section-header">
-            <span className="settings-header-icon badge-appearance" aria-hidden="true">
-              <Palette size={16} />
-            </span>
-            <h2>{t('appearance')}</h2>
-          </div>
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('appearance')}</h2>
+          <div className="settings-group-card">
+            {/* Language Switch */}
+            <div className="setting-row">
+              <span className="setting-label flex items-center gap-2">
+                <Globe2 size={18} className="text-muted" aria-hidden="true" />
+                <span>{t('language')}</span>
+              </span>
 
-          {/* Language Switch */}
-          <div className="setting-row">
-            <span className="setting-label flex items-center gap-2">
-              <Globe2 size={16} aria-hidden="true" />
-              <span>{t('language')}</span>
-            </span>
+              <div className="language-switch" role="group" aria-label={t('language')}>
+                <button
+                  type="button"
+                  lang="en"
+                  dir="ltr"
+                  aria-pressed={settings.language === 'en'}
+                  onClick={() => updateSettings({ language: 'en' })}
+                >
+                  {t('english')}
+                </button>
+                <button
+                  type="button"
+                  className="urdu-label"
+                  lang="ur"
+                  dir="rtl"
+                  aria-pressed={settings.language === 'ur'}
+                  onClick={() => updateSettings({ language: 'ur' })}
+                >
+                  {t('urdu')}
+                </button>
+              </div>
+            </div>
 
-            <div className="language-switch" role="group" aria-label={t('language')}>
+            {/* Dark Mode */}
+            <div className="setting-row">
+              <span className="setting-label flex items-center gap-2">
+                <Moon size={18} className="text-muted" aria-hidden="true" />
+                <span>{t('darkMode')}</span>
+              </span>
+
               <button
                 type="button"
-                lang="en"
-                dir="ltr"
-                aria-pressed={settings.language === 'en'}
-                onClick={() => updateSettings({ language: 'en' })}
+                className="toggle"
+                role="switch"
+                aria-checked={settings.darkMode}
+                aria-label={t('darkMode')}
+                onClick={() => updateSettings({ darkMode: !settings.darkMode })}
               >
-                {t('english')}
-              </button>
-              <button
-                type="button"
-                className="urdu-label"
-                lang="ur"
-                dir="rtl"
-                aria-pressed={settings.language === 'ur'}
-                onClick={() => updateSettings({ language: 'ur' })}
-              >
-                {t('urdu')}
+                <span />
               </button>
             </div>
-          </div>
-
-          {/* Dark Mode */}
-          <div className="setting-row">
-            <span className="setting-label flex items-center gap-2">
-              <Moon size={16} aria-hidden="true" />
-              <span>{t('darkMode')}</span>
-            </span>
-
-            <button
-              type="button"
-              className="toggle"
-              role="switch"
-              aria-checked={settings.darkMode}
-              aria-label={t('darkMode')}
-              onClick={() => updateSettings({ darkMode: !settings.darkMode })}
-            >
-              <span />
-            </button>
           </div>
         </section>
 
         {/* Section 2: Security */}
-        <section className="settings-group-card">
-          <div className="settings-section-header">
-            <span className="settings-header-icon badge-security" aria-hidden="true">
-              <ShieldCheck size={16} />
-            </span>
-            <h2>{t('security')}</h2>
-          </div>
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('security')}</h2>
+          <div className="settings-group-card">
+            <div className="setting-row flex-wrap">
+              <div className="setting-info-block">
+                <span className="setting-label flex items-center gap-2">
+                  <Lock size={18} className="text-muted" aria-hidden="true" />
+                  <span>{t('pinLock')}</span>
+                </span>
+                <span className={`status-badge ${pinActive ? 'status-active' : 'status-muted'}`}>
+                  {t(pinActive ? 'pinOn' : 'pinOff')}
+                </span>
+              </div>
 
-          <div className="setting-row flex-wrap">
-            <div className="setting-info-block">
-              <span className="setting-label flex items-center gap-2">
-                <Lock size={16} aria-hidden="true" />
-                <span>{t('pinLock')}</span>
-              </span>
-              <span className={`status-badge ${pinActive ? 'status-active' : 'status-muted'}`}>
-                {t(pinActive ? 'pinOn' : 'pinOff')}
-              </span>
-            </div>
-
-            <div className="setting-action-buttons">
-              <button
-                type="button"
-                className="button button-secondary text-sm pin-action-btn"
-                onClick={() => {
-                  setShowPinModal(true);
-                  setPinValue('');
-                  setPinConfirm('');
-                  setPinError('');
-                }}
-              >
-                <KeyRound size={14} aria-hidden="true" />
-                <span>{settings.pin ? t('changePin') : t('setPin')}</span>
-              </button>
-
-              {pinActive && (
+              <div className="setting-action-buttons">
                 <button
                   type="button"
-                  className="button button-danger text-sm pin-remove-btn"
-                  onClick={() => updateSettings({ pin: undefined })}
+                  className="button button-secondary text-sm pin-action-btn"
+                  onClick={() => {
+                    setShowPinModal(true);
+                    setPinValue('');
+                    setPinConfirm('');
+                    setPinError('');
+                  }}
                 >
-                  {t('removePin')}
+                  <KeyRound size={16} aria-hidden="true" />
+                  <span>{settings.pin ? t('changePin') : t('setPin')}</span>
                 </button>
-              )}
+
+                {pinActive && (
+                  <button
+                    type="button"
+                    className="button button-danger text-sm pin-remove-btn"
+                    onClick={() => updateSettings({ pin: undefined })}
+                  >
+                    {t('removePin')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="setting-row-subtext">
+              <p className="muted-copy text-xs">{t('pinLockHelp')}</p>
             </div>
           </div>
-
-          <p className="muted-copy text-xs">{t('pinLockHelp')}</p>
         </section>
 
         {/* Section 3: Data & Backup */}
-        <section className="settings-group-card">
-          <div className="settings-section-header">
-            <span className="settings-header-icon badge-data" aria-hidden="true">
-              <HardDrive size={16} />
-            </span>
-            <h2>{t('data')}</h2>
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('data')}</h2>
+          <div className="settings-group-card">
+            <Backup embedded />
           </div>
-
-          <Backup embedded />
         </section>
 
         {/* Section 4: Developer / Preview Controls (Collapsible, closed by default) */}
-        <section className="settings-group-card developer-section" id="preview-controls">
+        <section className="settings-group developer-section" id="preview-controls">
           <button
             type="button"
             className="developer-toggle-btn"
@@ -186,9 +172,7 @@ export function Settings() {
             aria-expanded={devOpen}
           >
             <div className="flex items-center gap-2">
-              <span className="settings-header-icon badge-dev" aria-hidden="true">
-                <FlaskConical size={16} />
-              </span>
+              <FlaskConical size={18} className="text-muted" aria-hidden="true" />
               <span>{t('developerOptions')}</span>
             </div>
             {devOpen ? (
@@ -204,24 +188,20 @@ export function Settings() {
         </section>
 
         {/* Section 5: About */}
-        <section className="settings-group-card about-card">
-          <div className="settings-section-header">
-            <span className="settings-header-icon badge-about" aria-hidden="true">
-              <Info size={16} />
-            </span>
-            <h2>{t('about')}</h2>
-          </div>
+        <section className="settings-group about-section">
+          <h2 className="settings-group-title">{t('about')}</h2>
+          <div className="settings-group-card">
+            <div className="setting-row">
+              <span className="text-muted text-sm">{t('currency')}</span>
+              <strong>
+                <bdi dir="ltr">{t('currencyLabel')}</bdi> (PKR)
+              </strong>
+            </div>
 
-          <div className="setting-row">
-            <span className="text-muted text-sm">{t('currency')}</span>
-            <strong>
-              <bdi dir="ltr">{t('currencyLabel')}</bdi> (PKR)
-            </strong>
-          </div>
-
-          <div className="setting-row">
-            <span className="text-muted text-sm">App Version</span>
-            <span className="app-version-badge">{t('appVersion')}</span>
+            <div className="setting-row">
+              <span className="text-muted text-sm">App Version</span>
+              <span className="app-version-badge">{t('appVersion')}</span>
+            </div>
           </div>
 
           <p className="muted-copy text-center offline-notice">{t('offline')}</p>
