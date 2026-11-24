@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router';
-import { BookOpen, ShieldCheck } from 'lucide-react';
+import { BookOpen, ShieldCheck, Lock } from 'lucide-react';
 import { useI18n } from './i18n';
 import { useLedger } from './state/LedgerContext';
 import { themeVariables, tokens } from './theme/tokens';
@@ -14,6 +14,23 @@ export default function App() {
   const { t, language, direction } = useI18n();
   const { ledger, loadError, storageError } = useLedger();
   const location = useLocation();
+  const [unlocked, setUnlocked] = useState(false);
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pinError, setPinError] = useState('');
+
+  const isLocked = Boolean(ledger.settings.pin && !unlocked);
+
+  function tryUnlock(pinCandidate = enteredPin) {
+    if (pinCandidate === ledger.settings.pin) {
+      setUnlocked(true);
+      setPinError('');
+      setEnteredPin('');
+    } else {
+      setPinError(t('pinIncorrect'));
+      setEnteredPin('');
+    }
+  }
+
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = direction;
@@ -38,7 +55,49 @@ export default function App() {
     </aside>
     <div className="phone-frame"><div className="phone-screen"><div className="phone-sensor" aria-hidden="true" />
       <main className="phone-app" key={location.pathname} id="preview-app" aria-label={t('app')}>
-        {loadError && location.pathname !== '/settings/backup' ? <div className="page-content empty-state"><BookOpen/><h1>{t('loadError')}</h1><p>{t('previewStorageError')}</p><Link className="button button-primary" to="/settings/backup">{t('import')}</Link></div>
+        {isLocked ? (
+          <div className="page-content empty-state flex flex-col items-center text-center" style={{ margin: 'auto 0' }}>
+            <span className="foundation-icon" style={{ marginBottom: '16px' }}><Lock aria-hidden="true"/></span>
+            <h2>{t('pinLock')}</h2>
+            <p>{t('enterPinToUnlock')}</p>
+            <div style={{ marginTop: '24px', width: '100%', maxWidth: '280px' }}>
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                pattern="\d{4}"
+                autoFocus
+                value={enteredPin}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setEnteredPin(val);
+                  if (val.length === 4) tryUnlock(val);
+                }}
+                placeholder="••••"
+                style={{
+                  textAlign: 'center',
+                  fontSize: '32px',
+                  letterSpacing: '12px',
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '2px solid var(--color-border)',
+                  background: 'var(--color-surface)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              {pinError && <p className="field-error" style={{ marginTop: '8px' }} role="alert">{pinError}</p>}
+              <button
+                type="button"
+                className="button button-primary"
+                style={{ marginTop: '16px' }}
+                onClick={() => tryUnlock()}
+              >
+                {t('unlock')}
+              </button>
+            </div>
+          </div>
+        ) : loadError && location.pathname !== '/settings/backup' ? <div className="page-content empty-state"><BookOpen/><h1>{t('loadError')}</h1><p>{t('previewStorageError')}</p><Link className="button button-primary" to="/settings/backup">{t('import')}</Link></div>
           : <><Routes>
             <Route path="/" element={<Home/>}/><Route path="/settings" element={<Settings/>}/>
             <Route path="/customers/new" element={<CustomerForm/>}/>

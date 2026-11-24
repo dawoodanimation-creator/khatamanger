@@ -15,3 +15,4 @@ playwright-report/
 khata-preview-source.zip
 
 .github-upload/
+.vercel

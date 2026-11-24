@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 import { emptyLedger } from '../models/ledger';
-import { addTransaction, deleteCustomer, saveCustomer } from './mutations';
+import { addTransaction, deleteCustomer, deleteTransaction, saveCustomer } from './mutations';
 import { balanceFor } from '../utils/balance';
 import { validateCustomer } from '../utils/validation';
 import { validEntryDate } from '../utils/dates';
@@ -22,6 +22,15 @@ test('deletion cascades only to the chosen customer', () => {
   expect(next.customers[0].id).toBe('other');
   expect(next.transactions).toEqual([]);
   expect(data.transactions).toHaveLength(1);
+});
+test('single transaction can be deleted and balances recalculate', () => {
+  const withOne = addTransaction(saveCustomer(emptyLedger(), customer), credit);
+  const payment = { id: 't2', customerId: 'ali', kind: 'payment' as const, amountPaisa: 2345, date: '2020-01-02T00:00:00.000', createdAt: '2020-01-02T00:00:00.000Z', note: '' };
+  const withTwo = addTransaction(withOne, payment);
+  expect(balanceFor(withTwo, 'ali')).toBe(10000);
+  const afterDelete = deleteTransaction(withTwo, 't2');
+  expect(afterDelete.transactions).toHaveLength(1);
+  expect(balanceFor(afterDelete, 'ali')).toBe(12345);
 });
 test('transactions reject missing customers and duplicates', () => {
   expect(() => addTransaction(emptyLedger(), credit)).toThrow();

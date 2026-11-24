@@ -13,6 +13,7 @@ interface LedgerState {
   saveCustomer: (customer: Customer, expected?: Customer, duplicateIds?: string[]) => Promise<boolean>;
   deleteCustomer: (id: string, expected: Ledger) => Promise<boolean>;
   addTransaction: (transaction: LedgerTransaction, expected: Customer) => Promise<boolean>;
+  deleteTransaction: (id: string, customerId: string) => Promise<boolean>;
   restore: (ledger: Ledger, expected: string | null) => Promise<boolean>;
   replaceRecords: (ledger: Pick<Ledger, 'customers' | 'transactions'>, expected: string | null) => Promise<boolean>;
 }
@@ -80,6 +81,11 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
       if (!same(expected, data.customers.find(c => c.id === transaction.customerId))) throw new CommitConflict();
       if (balanceFor(data, transaction.customerId) !== balanceFor(ledger, transaction.customerId)) throw new CommitConflict();
       return mutations.addTransaction(data, transaction);
+    }),
+    deleteTransaction: (id: string, customerId: string) => commit(data => {
+      if (!data.customers.some(c => c.id === customerId)) throw new CommitConflict();
+      if (balanceFor(data, customerId) !== balanceFor(ledger, customerId)) throw new CommitConflict();
+      return mutations.deleteTransaction(data, id);
     }),
     restore: (data, expected) => commit(() => data, { data, expected }),
     replaceRecords: (records, expected) => {

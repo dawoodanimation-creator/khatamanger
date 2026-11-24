@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Check, UserRound } from 'lucide-react';
+import { Check, UserRound, BookUser } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { CustomerContext } from '../components/CustomerContext';
 import { likelyDuplicates } from '../utils/customerIdentity';
@@ -27,6 +27,26 @@ export function CustomerForm() {
   const [duplicateReview, setDuplicateReview] = useState<string[] | null>(null);
   const saving = useRef(false);
   const newCustomerId = useRef<string | null>(null);
+
+  async function pickContact() {
+    setError('');
+    const nav = navigator as unknown as { contacts?: { select: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>> } };
+    if (!nav.contacts?.select) {
+      setError(t('contactNotSupported'));
+      return;
+    }
+    try {
+      const selected = await nav.contacts.select(['name', 'tel'], { multiple: false });
+      if (selected && selected.length > 0) {
+        const contact = selected[0];
+        if (contact.name?.[0]) setName(contact.name[0]);
+        if (contact.tel?.[0]) setPhone(contact.tel[0]);
+      }
+    } catch {
+      // User cancelled
+    }
+  }
+
   if (customerId && !existing) return <MissingCustomer/>;
   const backTo = existing ? customerPath(existing.id) : '/';
   async function submit(event?: FormEvent, reviewedIds?: string[]) {
@@ -50,7 +70,17 @@ export function CustomerForm() {
   }
   return <><Header title={t(existing ? 'editCustomer' : 'addCustomer')} backTo={backTo}/>
     <form noValidate onSubmit={event => void submit(event)} className="page-content form-content">
-      <div className="form-symbol" aria-hidden="true"><UserRound/></div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="form-symbol" aria-hidden="true"><UserRound/></div>
+        <button
+          type="button"
+          className="button button-secondary text-sm"
+          style={{ width: 'auto', minHeight: '40px', padding: '4px 14px' }}
+          onClick={pickContact}
+        >
+          <BookUser aria-hidden="true"/> {t('importContact')}
+        </button>
+      </div>
       <div className="form-field"><label htmlFor="customer-name">{t('name')}</label>
         <input id="customer-name" data-entry-focus value={name} onChange={e => setName(e.target.value)} maxLength={100} autoComplete="name" autoCapitalize="words" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} disabled={busy}/>
         {errors.name && <p id="name-error" className="field-error" role="alert">{t(errors.name)}</p>}

@@ -35,12 +35,32 @@ export function decodeLedger(source: string): Ledger {
     const t = object(raw);
     if (typeof t.amountPaisa !== 'number' || !Number.isInteger(t.amountPaisa) || t.amountPaisa <= 0 || t.amountPaisa > maxAmountPaisa) throw new Error('Invalid transaction amount');
     if (t.kind !== 'credit' && t.kind !== 'payment') throw new Error('Invalid transaction kind');
-    return { id: text(t, 'id', 100), customerId: text(t, 'customerId', 100), kind: t.kind,
-      amountPaisa: t.amountPaisa, date: date(t.date), createdAt: date(t.createdAt), note: text(t, 'note', 500, true) };
+    const items = Array.isArray(t.items) ? t.items.map(rawItem => {
+      const it = object(rawItem);
+      return {
+        id: text(it, 'id', 100),
+        name: text(it, 'name', 100),
+        qty: it.qty ? text(it, 'qty', 50, true) : undefined,
+        pricePaisa: typeof it.pricePaisa === 'number' && Number.isInteger(it.pricePaisa) && it.pricePaisa >= 0 && it.pricePaisa <= maxAmountPaisa ? it.pricePaisa : undefined,
+      };
+    }) : undefined;
+    const dueDate = t.dueDate && typeof t.dueDate === 'string' ? date(t.dueDate) : undefined;
+    return {
+      id: text(t, 'id', 100), customerId: text(t, 'customerId', 100), kind: t.kind,
+      amountPaisa: t.amountPaisa, date: date(t.date), createdAt: date(t.createdAt), note: text(t, 'note', 500, true),
+      ...(items && items.length ? { items } : {}),
+      ...(dueDate ? { dueDate } : {}),
+    };
   });
   const ids = new Set(customers.map(c => c.id));
   if (ids.size !== customers.length || new Set(transactions.map(t => t.id)).size !== transactions.length || transactions.some(t => !ids.has(t.customerId))) throw new Error('Duplicate IDs or orphan transaction');
   const settings = object(j.settings);
   if ((settings.language !== 'en' && settings.language !== 'ur') || typeof settings.darkMode !== 'boolean') throw new Error('Invalid settings');
-  return { customers, transactions, settings: { language: settings.language, darkMode: settings.darkMode } };
+  const appSettings: { language: 'en' | 'ur'; darkMode: boolean; hideBalances?: boolean; pin?: string } = {
+    language: settings.language,
+    darkMode: settings.darkMode,
+  };
+  if (typeof settings.hideBalances === 'boolean' && settings.hideBalances) appSettings.hideBalances = true;
+  if (typeof settings.pin === 'string' && /^\d{4}$/.test(settings.pin)) appSettings.pin = settings.pin;
+  return { customers, transactions, settings: appSettings };
 }

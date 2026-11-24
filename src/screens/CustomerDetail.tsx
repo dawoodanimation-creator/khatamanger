@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Banknote, Edit3, Plus, Trash2, MessageCircle, MessageSquare, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Banknote, Edit3, Plus, Trash2, MessageCircle, MessageSquare, ArrowUpRight, ArrowDownLeft, Clock, FileText } from 'lucide-react';
 import type { Ledger } from '../models/ledger';
 import { CustomerContext } from '../components/CustomerContext';
 import { Header } from '../components/Header';
@@ -14,6 +14,7 @@ import { money } from '../utils/money';
 import { localDate } from '../utils/dates';
 import { customerPath } from '../utils/routes';
 import { reminderMessage, reminderLink } from '../utils/reminders';
+import { printCustomerStatement } from '../utils/statement';
 export function CustomerDetail() {
   const { customerId } = useParams();
   const { ledger, deleteCustomer, writeError } = useLedger();
@@ -38,6 +39,7 @@ export function CustomerDetail() {
   function openDialog(value: typeof dialog) { deleteSnapshot.current = ledger; setError(''); setDialog(value); }
   const whatsapp = reminderLink(customer, balance, true);
   return <><Header title={customer.name} backTo="/" actions={<>
+    <button type="button" className="icon-button" aria-label={t('downloadStatement')} onClick={() => printCustomerStatement(customer, runningHistoryFor(ledger, customer.id), balance, t('currencyLabel'), language === 'ur')}><FileText/></button>
     <Link className="icon-button" to={customerPath(customer.id, 'edit')} aria-label={t('edit')}><Edit3/></Link>
     <button type="button" className="icon-button danger-icon" aria-label={t('delete')} onClick={() => openDialog('delete')}><Trash2/></button>
   </>}/>
@@ -49,6 +51,7 @@ export function CustomerDetail() {
           <p className="muted-copy">{t('reminderHelp')}</p><div className="share-actions">
             {whatsapp ? <a className="button button-primary" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true"/>{t('whatsapp')}</a> : <button className="button button-primary" type="button" onClick={() => setError(t('invalidWhatsApp'))}><MessageCircle aria-hidden="true"/>{t('whatsapp')}</button>}
             <a className="button button-secondary" href={reminderLink(customer, balance, false)!}><MessageSquare aria-hidden="true"/>{t('sms')}</a>
+            <button type="button" className="button button-secondary" onClick={() => printCustomerStatement(customer, runningHistoryFor(ledger, customer.id), balance, t('currencyLabel'), language === 'ur')}><FileText aria-hidden="true"/>{t('downloadStatement')}</button>
           </div>{error && dialog !== 'delete' && <p className="field-error" role="alert">{error}</p>}
         </section>}
       </section>
@@ -59,6 +62,27 @@ export function CustomerDetail() {
             <div className="entry-title"><strong>{t(transaction.kind === 'credit' ? 'credit' : 'payment')}</strong><time dateTime={transaction.date}>{localDate(transaction.date, language)}</time></div>
             <bdi dir="ltr" className={`entry-amount ${transaction.kind === 'credit' ? 'balance-owed' : 'balance-payable'}`}>{transaction.kind === 'credit' ? '+' : '−'} {money(transaction.amountPaisa, t('currencyLabel'))}</bdi>
           </div>
+          {transaction.items && transaction.items.length > 0 && (
+            <div className="item-list-display" aria-label={t('items')}>
+              {transaction.items.map(item => (
+                <div key={item.id} className="item-entry-row">
+                  <div>
+                    <span className="item-entry-name">{item.name}</span>
+                    {item.qty && <span className="item-entry-meta"> ({item.qty})</span>}
+                  </div>
+                  {item.pricePaisa !== undefined && (
+                    <span className="item-entry-meta"><bdi dir="ltr">{money(item.pricePaisa, t('currencyLabel'))}</bdi></span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {transaction.dueDate && (
+            <div className="due-date-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--color-primary)', background: 'var(--color-primary-soft)', padding: '2px 8px', borderRadius: '12px', marginTop: '6px' }}>
+              <Clock size={12} aria-hidden="true"/>
+              <span>{t('dueDate')}: {transaction.dueDate}</span>
+            </div>
+          )}
           {transaction.note && <p className="entry-note">{transaction.note}</p>}
           <div className="running-balance"><span>{t('running')}</span><Balance paisa={balancePaisa}/></div>
         </li>)}

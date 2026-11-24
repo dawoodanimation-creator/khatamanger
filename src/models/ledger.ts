@@ -1,7 +1,12 @@
 import type { Customer } from './customer';
 import type { LedgerTransaction } from './transaction';
 export type Language = 'en' | 'ur';
-export interface AppSettings { language: Language; darkMode: boolean }
+export interface AppSettings {
+  language: Language;
+  darkMode: boolean;
+  hideBalances?: boolean;
+  pin?: string;
+}
 export interface Ledger {
   customers: Customer[];
   transactions: LedgerTransaction[];

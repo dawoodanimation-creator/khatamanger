@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { readLedger, writeLedger } from './storage';
+import { readLedger, writeLedger, serializedWrite } from './storage';
 import { emptyLedger } from '../models/ledger';
 test('settings and data survive a storage reload', () => {
   const memory = new Map<string, string>();
@@ -11,4 +11,8 @@ test('settings and data survive a storage reload', () => {
 });
 test('unreadable data is rejected rather than silently reset', () => {
   expect(() => readLedger({ getItem: () => 'broken json' })).toThrow();
+});
+test('serializedWrite falls back cleanly when navigator.locks is unavailable', async () => {
+  const result = await serializedWrite(() => 42);
+  expect(result).toBe(42);
 });

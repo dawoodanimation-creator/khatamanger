@@ -1,11 +1,39 @@
-import { ArrowDownLeft, ArrowUpRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useI18n } from '../i18n';
+import { useLedger } from '../state/LedgerContext';
 import { money } from '../utils/money';
-export function Balance({ paisa }: { paisa: number }) {
+
+interface BalanceProps {
+  paisa: number;
+  forceShow?: boolean;
+}
+
+export function Balance({ paisa, forceShow }: BalanceProps) {
   const { t } = useI18n();
-  const Icon = paisa > 0 ? ArrowDownLeft : paisa < 0 ? ArrowUpRight : Check;
-  return <div className={`balance ${paisa > 0 ? 'balance-owed' : paisa < 0 ? 'balance-payable' : 'balance-settled'}`}>
-    <bdi className="balance-amount" dir="ltr">{money(paisa, t('currencyLabel'))}</bdi>
-    <span className="balance-direction"><Icon aria-hidden="true"/>{t(paisa > 0 ? 'owesYou' : paisa < 0 ? 'youOwe' : 'settled')}</span>
-  </div>;
+  const { ledger } = useLedger();
+  const hidden = !forceShow && !!ledger.settings.hideBalances;
+
+  const isOwed = paisa > 0;
+  const isPayable = paisa < 0;
+  const isSettled = paisa === 0;
+
+  const label = t(isOwed ? 'owesYou' : isPayable ? 'youOwe' : 'settled');
+
+  const statusClass = isOwed
+    ? 'balance-owed'
+    : isPayable
+    ? 'balance-payable'
+    : 'balance-settled';
+
+  return (
+    <div className={`balance ${statusClass}`}>
+      <bdi className="balance-amount" dir="ltr">
+        {hidden ? '••••••' : money(paisa, t('currencyLabel'))}
+      </bdi>
+      <span className="balance-direction">
+        {isSettled && <Check aria-hidden="true" />}
+        <span>{label}</span>
+      </span>
+    </div>
+  );
 }

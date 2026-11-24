@@ -1,5 +1,13 @@
 /** Date strings preserve the Flutter JSON representation. */
 export type TransactionKind = 'credit' | 'payment';
+
+export interface TransactionItem {
+  id: string;
+  name: string;
+  qty?: string;
+  pricePaisa?: number;
+}
+
 export interface LedgerTransaction {
   id: string;
   customerId: string;
@@ -8,4 +16,6 @@ export interface LedgerTransaction {
   date: string;
   createdAt: string;
   note: string;
+  items?: TransactionItem[];
+  dueDate?: string;
 }

@@ -9,6 +9,32 @@ import { emptyLedger, type Ledger } from './models/ledger';
 import { encodeLedger } from './utils/backup';
 import { STORAGE_KEY, readLedger } from './state/storage';
 
+const storageMap = new Map<string, string>();
+Storage.prototype.getItem = function (key: string) { return storageMap.get(key) ?? null; };
+Storage.prototype.setItem = function (key: string, value: string) { storageMap.set(key, String(value)); };
+Storage.prototype.removeItem = function (key: string) { storageMap.delete(key); };
+Storage.prototype.clear = function () { storageMap.clear(); };
+Storage.prototype.key = function (index: number) { return Array.from(storageMap.keys())[index] ?? null; };
+Object.defineProperty(Storage.prototype, 'length', { get: function () { return storageMap.size; }, configurable: true });
+
+const localStorageMock = Object.create(Storage.prototype);
+try {
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    writable: true,
+    value: localStorageMock,
+  });
+} catch {}
+if (typeof window !== 'undefined') {
+  try {
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      writable: true,
+      value: localStorageMock,
+    });
+  } catch {}
+}
+
 const ali = { id: 'ali', name: 'Ali', phone: '03001234567', note: '' };
 function seeded(): Ledger {
   return { ...emptyLedger(), customers: [ali], transactions: [{ id: 't', customerId: 'ali', kind: 'credit', amountPaisa: 10010,
@@ -19,6 +45,13 @@ function open(route = '/', data?: Ledger) {
   return render(<MemoryRouter initialEntries={[route]}><LedgerProvider><App/></LedgerProvider></MemoryRouter>);
 }
 beforeAll(() => {
+  try {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      writable: true,
+      value: localStorageMock,
+    });
+  } catch {}
   Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: async (_name: string, _options: unknown, callback: () => unknown) => callback() } });
   // jsdom has no top layer; native browser dialog still owns focus/escape at runtime.
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
@@ -26,7 +59,9 @@ beforeAll(() => {
   URL.createObjectURL = vi.fn(() => 'blob:preview-test');
   URL.revokeObjectURL = vi.fn();
 });
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorageMock.clear();
+});
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('complete customer flow', () => {

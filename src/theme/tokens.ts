@@ -18,8 +18,8 @@ export const tokens = {
   },
   typography: {
     fontEnglish: "'Inter', system-ui, sans-serif",
-    fontUrdu: "'Noto Nastaliq Urdu', 'Inter', serif",
-    fontContent: "'Inter', 'Noto Nastaliq Urdu', sans-serif",
+    fontUrdu: "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', 'Inter', serif",
+    fontContent: "'Inter', 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', sans-serif",
     sizeInput: '16px', sizeXs: '12px', sizeSm: '14px', sizeBody: '15px', sizeLabel: '14px', sizeTitle: '20px',
     sizeHeading: '24px', sizeDisplay: '36px', sizePreviewTitle: '32px',
     lineBody: '1.6', lineUrdu: '2.35', lineTitle: '1.3',
