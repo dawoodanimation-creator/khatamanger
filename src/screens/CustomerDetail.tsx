@@ -231,7 +231,7 @@ export function CustomerDetail() {
                     aria-label={t('remind')}
                   >
                     <Send size={15} aria-hidden="true" />
-                    <span>{t('remind')}</span>
+                    <span>{language === 'ur' ? 'یاد دہانی' : 'Remind'}</span>
                   </button>
                 </div>
 
@@ -311,9 +311,10 @@ export function CustomerDetail() {
                               {money(transaction.amountPaisa, t('currencyLabel'))}
                             </bdi>
                             <div className="running-balance-quiet">
-                              <span className="running-amount">
+                              <span>{t('balance')}:</span>{' '}
+                              <bdi dir="ltr" className="running-amount">
                                 {money(balancePaisa, t('currencyLabel'))}
-                              </span>
+                              </bdi>
                             </div>
                           </div>
                         </div>
@@ -388,14 +389,14 @@ export function CustomerDetail() {
       {/* Sticky Bottom Action Bar (Equal width, 56px, aligned with page margins) */}
       <div className="transaction-actions side-by-side">
         <Link
-          className="button button-primary button-credit-action"
+          className="button button-primary btn-udhaar-primary"
           to={customerPath(customer.id, 'credit')}
         >
           <Plus size={18} aria-hidden="true" />
           <span>{t('credit')}</span>
         </Link>
         <Link
-          className="button button-secondary button-payment-action"
+          className="button button-secondary btn-payment-outline"
           to={customerPath(customer.id, 'payment')}
         >
           <Banknote size={18} aria-hidden="true" />

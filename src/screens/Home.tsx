@@ -113,17 +113,6 @@ export function Home() {
           <FilterChips current={filter} onChange={setFilter} counts={counts} />
         )}
 
-        {/* Customer List Header & Counts */}
-        <div className="section-heading flex items-center justify-between">
-          <h2 className="section-title">{t('customers')}</h2>
-          <span
-            className="count-text"
-            aria-label={`${matchingCustomers.length} ${t('customers')}`}
-          >
-            {matchingCustomers.length}
-          </span>
-        </div>
-
         {/* Empty States */}
         {ledger.customers.length === 0 ? (
           <div className="empty-state-minimal text-center">

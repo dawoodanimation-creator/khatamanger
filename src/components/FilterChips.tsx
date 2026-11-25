@@ -34,11 +34,11 @@ export function FilterChips({ current, onChange, counts }: FilterChipsProps) {
               type="button"
               role="radio"
               aria-checked={isActive}
-              className={`filter-chip filter-tab ${isActive ? 'filter-chip-active' : ''}`}
+              className={`filter-tab-btn ${isActive ? 'filter-tab-active' : ''}`}
               onClick={() => onChange(chip.id)}
             >
-              <span className="filter-chip-label">{chip.label}</span>
-              <span className="filter-chip-count">{chip.count}</span>
+              <span className="filter-tab-label">{chip.label}</span>
+              <span className="filter-tab-count">{chip.count}</span>
             </button>
           );
         })}
