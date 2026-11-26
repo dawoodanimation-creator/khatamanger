@@ -722,6 +722,8 @@ bdi[dir=ltr], .reminder-message, .entry-amount { line-height: var(--type-line-bo
 .monthly-net-row { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-s2); border-top: 1px solid var(--color-border-subtle, #e5e5e5); }
 [data-theme=dark] .monthly-net-row { border-top-color: #262626; }
 .top-customer-link { text-decoration: none; color: inherit; }
+.top-customer-link > span { min-width: 0; flex: 1; }
+.top-customer-link > bdi { flex-shrink: 0; white-space: nowrap; }
 
 .template-editor-card { display: flex; flex-direction: column; gap: var(--space-s3); }
 .template-textarea { width: 100%; box-sizing: border-box; font-size: var(--type-size-sm); }
