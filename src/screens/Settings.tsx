@@ -158,7 +158,7 @@ export function Settings() {
         {/* Section 3: Data & Backup */}
         <section className="settings-group">
           <h2 className="settings-group-title">{t('data')}</h2>
-          <div className="settings-group-card">
+          <div className="settings-group-card settings-group-card-padded">
             <Backup embedded />
           </div>
         </section>

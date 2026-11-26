@@ -311,7 +311,7 @@ export function CustomerDetail() {
                               {money(transaction.amountPaisa, t('currencyLabel'))}
                             </bdi>
                             <div className="running-balance-quiet">
-                              <span>{t('balance')}:</span>{' '}
+                              <span>{t('running')}:</span>{' '}
                               <bdi dir="ltr" className="running-amount">
                                 {money(balancePaisa, t('currencyLabel'))}
                               </bdi>
