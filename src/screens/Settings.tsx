@@ -7,8 +7,10 @@ import {
   ChevronDown,
   ChevronUp,
   FlaskConical,
-  KeyRound
+  KeyRound,
+  BarChart3
 } from 'lucide-react';
+import { Link } from 'react-router';
 import { Backup } from './Backup';
 import { ReviewControls } from '../components/ReviewControls';
 import { Header } from '../components/Header';
@@ -16,10 +18,11 @@ import { Modal } from '../components/Modal';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
 import { useUiPrefs } from '../state/UiPrefsContext';
+import { REMINDER_PRESETS } from '../utils/reminderTemplates';
 
 export function Settings() {
   const { ledger, updateSettings } = useLedger();
-  const { prefs, setNumberFormat } = useUiPrefs();
+  const { prefs, setNumberFormat, setReminderTemplate } = useUiPrefs();
   const { t } = useI18n();
   const settings = ledger.settings;
 
@@ -186,6 +189,64 @@ export function Settings() {
           <h2 className="settings-group-title">{t('data')}</h2>
           <div className="settings-group-card settings-group-card-padded">
             <Backup embedded />
+          </div>
+        </section>
+
+        {/* Section 3b: Monthly Summary & Reminder Templates */}
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('overview')}</h2>
+          <div className="settings-group-card">
+            <Link to="/summary" className="setting-row top-customer-link">
+              <span className="setting-label flex items-center gap-2">
+                <BarChart3 size={18} className="text-muted" aria-hidden="true" />
+                <span>{t('monthlySummary')}</span>
+              </span>
+              <span className="text-xs text-muted">→</span>
+            </Link>
+          </div>
+        </section>
+
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('reminderTemplateLabel')}</h2>
+          <div className="settings-group-card settings-group-card-padded template-editor-card">
+            <p className="text-xs text-muted">{t('reminderTemplateHelp')}</p>
+            <textarea
+              className="form-control-textarea template-textarea"
+              rows={3}
+              aria-label={t('reminderTemplateLabel')}
+              value={prefs.reminderTemplate ?? REMINDER_PRESETS.roman}
+              onChange={e => setReminderTemplate(e.target.value)}
+            />
+            <div className="template-presets-row">
+              <button
+                type="button"
+                className="suggestion-chip"
+                onClick={() => setReminderTemplate(REMINDER_PRESETS.en)}
+              >
+                {t('presetEnglish')}
+              </button>
+              <button
+                type="button"
+                className="suggestion-chip"
+                onClick={() => setReminderTemplate(REMINDER_PRESETS.ur)}
+              >
+                {t('presetUrdu')}
+              </button>
+              <button
+                type="button"
+                className="suggestion-chip"
+                onClick={() => setReminderTemplate(REMINDER_PRESETS.roman)}
+              >
+                {t('presetRomanUrdu')}
+              </button>
+              <button
+                type="button"
+                className="suggestion-chip"
+                onClick={() => setReminderTemplate(null)}
+              >
+                {t('resetDefault')}
+              </button>
+            </div>
           </div>
         </section>
 

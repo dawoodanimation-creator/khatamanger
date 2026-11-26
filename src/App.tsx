@@ -11,6 +11,7 @@ import { CustomerForm } from './screens/CustomerForm';
 import { CustomerDetail } from './screens/CustomerDetail';
 import { TransactionForm } from './screens/TransactionForm';
 import { Backup } from './screens/Backup';
+import { MonthlySummary } from './screens/MonthlySummary';
 export default function App() {
   const { t, language, direction } = useI18n();
   const { ledger, loadError, storageError } = useLedger();
@@ -101,6 +102,7 @@ export default function App() {
         ) : loadError && location.pathname !== '/settings/backup' ? <div className="page-content empty-state"><BookOpen/><h1>{t('loadError')}</h1><p>{t('previewStorageError')}</p><Link className="button button-primary" to="/settings/backup">{t('import')}</Link></div>
           : <><Routes>
             <Route path="/" element={<Home/>}/><Route path="/settings" element={<Settings/>}/>
+            <Route path="/summary" element={<MonthlySummary/>}/>
             <Route path="/customers/new" element={<CustomerForm/>}/>
             <Route path="/customer/:customerId" element={<CustomerDetail/>}/>
             <Route path="/customer/:customerId/edit" element={<CustomerForm/>}/>

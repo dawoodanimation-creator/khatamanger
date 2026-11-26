@@ -20,6 +20,7 @@ import {
   PinOff,
 } from 'lucide-react';
 import type { Ledger } from '../models/ledger';
+import type { LedgerTransaction } from '../models/transaction';
 import { CustomerContext } from '../components/CustomerContext';
 import { Header } from '../components/Header';
 import { Balance } from '../components/Balance';
@@ -35,20 +36,23 @@ import { formatMoney } from '../utils/numberFormat';
 import { calculateCustomerOverdue } from '../utils/overdue';
 import { localDate, monthYearLabel } from '../utils/dates';
 import { customerPath } from '../utils/routes';
-import { reminderMessage, reminderLink } from '../utils/reminders';
-import { printCustomerStatement } from '../utils/statement';
+import { buildCustomReminderLink, buildCustomReminderMessage } from '../utils/reminderTemplates';
+import { statementWhatsAppLink } from '../utils/statementShare';
 import { getInitials } from '../utils/avatar';
 
 export function CustomerDetail() {
   const { customerId } = useParams();
-  const { ledger, deleteCustomer, writeError } = useLedger();
+  const { ledger, deleteCustomer, deleteTransaction, addTransaction, writeError } = useLedger();
   const { prefs, togglePinCustomer } = useUiPrefs();
   const customer = ledger.customers.find(c => c.id === customerId);
   const { t, language } = useI18n();
   const navigate = useNavigate();
 
   const [dialog, setDialog] = useState<'delete' | null>(null);
+  const [txToDelete, setTxToDelete] = useState<LedgerTransaction | null>(null);
+  const [deletedUndoTx, setDeletedUndoTx] = useState<LedgerTransaction | null>(null);
   const [showReminderSheet, setShowReminderSheet] = useState(false);
+  const [showStatementSheet, setShowStatementSheet] = useState(false);
   const deleteSnapshot = useRef<Ledger>(ledger);
   const removing = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -87,8 +91,62 @@ export function CustomerDetail() {
   if (!customer) return <MissingCustomer />;
 
   const initials = getInitials(customer.name);
-  const whatsapp = reminderLink(customer, balance, true);
-  const sms = reminderLink(customer, balance, false);
+  const whatsapp = buildCustomReminderLink(
+    customer,
+    balance,
+    true,
+    prefs.reminderTemplate,
+    prefs.numberFormat,
+    t('currencyLabel')
+  );
+  const sms = buildCustomReminderLink(
+    customer,
+    balance,
+    false,
+    prefs.reminderTemplate,
+    prefs.numberFormat,
+    t('currencyLabel')
+  );
+  const customReminderText = buildCustomReminderMessage(
+    customer,
+    balance,
+    prefs.reminderTemplate,
+    prefs.numberFormat,
+    t('currencyLabel')
+  );
+  const chronologicalHistory = runningHistoryFor(ledger, customer.id);
+  const statementWaHref = statementWhatsAppLink(
+    customer,
+    chronologicalHistory,
+    balance,
+    t('currencyLabel'),
+    prefs.numberFormat,
+    language
+  );
+
+  async function confirmDeleteTransaction() {
+    if (!txToDelete || busy) return;
+    setBusy(true);
+    setError('');
+    if (await deleteTransaction(txToDelete.id, customer!.id)) {
+      setDeletedUndoTx(txToDelete);
+      setTxToDelete(null);
+    } else {
+      setError(t(writeError()));
+    }
+    setBusy(false);
+  }
+
+  async function undoDeleteTransaction() {
+    if (!deletedUndoTx || busy) return;
+    setBusy(true);
+    if (await addTransaction(deletedUndoTx, customer!)) {
+      setDeletedUndoTx(null);
+    } else {
+      setError(t(writeError()));
+    }
+    setBusy(false);
+  }
 
   function toggleItemExpand(id: string) {
     setExpandedItems(prev => {
@@ -132,14 +190,7 @@ export function CustomerDetail() {
     {
       label: t('downloadStatement'),
       icon: <FileText size={16} />,
-      onClick: () =>
-        printCustomerStatement(
-          customer,
-          runningHistoryFor(ledger, customer.id),
-          balance,
-          t('currencyLabel'),
-          language === 'ur'
-        ),
+      onClick: () => setShowStatementSheet(true),
     },
     {
       label: t('delete'),
@@ -252,7 +303,7 @@ export function CustomerDetail() {
                 </div>
 
                 <div className="sr-only reminder-message">
-                  {reminderMessage(customer, balance)}
+                  {customReminderText}
                 </div>
               </section>
             )}
@@ -322,15 +373,25 @@ export function CustomerDetail() {
                           </div>
 
                           <div className="entry-amount-col">
-                            <bdi
-                              dir="ltr"
-                              className={`entry-amount ${
-                                isCredit ? 'balance-owed' : 'balance-payable'
-                              }`}
-                            >
-                              {isCredit ? '+' : '−'}{' '}
-                              {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
-                            </bdi>
+                            <div className="entry-amount-actions">
+                              <bdi
+                                dir="ltr"
+                                className={`entry-amount ${
+                                  isCredit ? 'balance-owed' : 'balance-payable'
+                                }`}
+                              >
+                                {isCredit ? '+' : '−'}{' '}
+                                {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
+                              </bdi>
+                              <button
+                                type="button"
+                                className="entry-delete-btn"
+                                aria-label={t('deleteEntryTitle')}
+                                onClick={() => setTxToDelete(transaction)}
+                              >
+                                <Trash2 size={14} aria-hidden="true" />
+                              </button>
+                            </div>
                             <div className="running-balance-quiet">
                               <span>{t('running')}:</span>{' '}
                               <bdi dir="ltr" className="running-amount">
@@ -459,12 +520,144 @@ export function CustomerDetail() {
         >
           <div className="reminder-sheet-content">
             <p className="reminder-sheet-preview-label">{t('reminderHelp')}</p>
-            <div className="reminder-message-box" dir="ltr">
-              {reminderMessage(customer, balance)}
+            <div className="reminder-message-box" dir="auto">
+              {customReminderText}
             </div>
           </div>
         </BottomSheet>
       )}
+
+      {/* Statement Share / Print Bottom Sheet */}
+      {showStatementSheet && (
+        <BottomSheet
+          title={t('statementTitle')}
+          onDismiss={() => setShowStatementSheet(false)}
+          actions={
+            <div className="reminder-sheet-actions">
+              <a
+                className="button button-primary"
+                href={statementWaHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowStatementSheet(false)}
+              >
+                <MessageCircle size={18} aria-hidden="true" />
+                <span>{t('shareWhatsApp')}</span>
+              </a>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => {
+                  setShowStatementSheet(false);
+                  setTimeout(() => window.print(), 100);
+                }}
+              >
+                <FileText size={18} aria-hidden="true" />
+                <span>{t('savePdf')}</span>
+              </button>
+            </div>
+          }
+        >
+          <p className="text-sm text-muted">
+            {customer.name} · {formatMoney(balance, t('currencyLabel'), prefs.numberFormat)} ({chronologicalHistory.length} {t('entries')})
+          </p>
+        </BottomSheet>
+      )}
+
+      {/* Undo Deleted Transaction Snackbar */}
+      {deletedUndoTx && (
+        <div className="undo-snackbar" role="status">
+          <span>{t('entryDeleted')}</span>
+          <button
+            type="button"
+            className="undo-snackbar-btn"
+            disabled={busy}
+            onClick={() => void undoDeleteTransaction()}
+          >
+            {t('undo')}
+          </button>
+        </div>
+      )}
+
+      {/* Single Transaction Delete Modal */}
+      {txToDelete && (
+        <Modal
+          title={t('deleteEntryTitle')}
+          onDismiss={() => setTxToDelete(null)}
+          actions={
+            <button
+              className="button button-danger"
+              type="button"
+              disabled={busy}
+              onClick={() => void confirmDeleteTransaction()}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+              {t('delete')}
+            </button>
+          }
+        >
+          <p>
+            {t(txToDelete.kind === 'credit' ? 'credit' : 'payment')} ·{' '}
+            <bdi dir="ltr">
+              {formatMoney(txToDelete.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
+            </bdi>
+          </p>
+          <p>{t('deleteEntryWarning')}</p>
+        </Modal>
+      )}
+
+      {/* Clean Black-on-White Print Statement (visible only in @media print) */}
+      <section id="statement-print-root" className="print-statement-only" aria-hidden="true">
+        <div className="print-header">
+          <h1>{language === 'ur' ? 'کھاتہ اسٹیٹمنٹ' : 'Account Statement'}</h1>
+          <p>{localDate(new Date().toISOString().slice(0, 10), language)}</p>
+        </div>
+        <div className="print-customer-meta">
+          <div>
+            <strong>{customer.name}</strong> ({customer.phone})
+          </div>
+          <div>
+            {t('dateRange')}:{' '}
+            {chronologicalHistory.length > 0
+              ? `${localDate(chronologicalHistory[0].transaction.date, language)} – ${localDate(
+                  chronologicalHistory[chronologicalHistory.length - 1].transaction.date,
+                  language
+                )}`
+              : '—'}
+          </div>
+        </div>
+        <table className="print-table">
+          <thead>
+            <tr>
+              <th>{t('date')}</th>
+              <th>{t('entries')}</th>
+              <th>{t('amount')}</th>
+              <th>{t('balance')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chronologicalHistory.map(({ transaction, balancePaisa }) => (
+              <tr key={transaction.id}>
+                <td>{localDate(transaction.date, language)}</td>
+                <td>
+                  {t(transaction.kind === 'credit' ? 'credit' : 'payment')}
+                  {transaction.note ? ` — ${transaction.note}` : ''}
+                </td>
+                <td>
+                  {transaction.kind === 'credit' ? '+' : '−'}{' '}
+                  {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
+                </td>
+                <td>{formatMoney(balancePaisa, t('currencyLabel'), prefs.numberFormat)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="print-footer-balance">
+          <strong>
+            {t('balance')}: {formatMoney(balance, t('currencyLabel'), prefs.numberFormat)}
+          </strong>
+        </div>
+      </section>
 
       {/* Delete Confirmation Modal (Existing modal preserved) */}
       {dialog === 'delete' && (
