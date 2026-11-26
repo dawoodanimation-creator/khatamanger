@@ -196,12 +196,12 @@ export function Settings() {
         <section className="settings-group">
           <h2 className="settings-group-title">{t('overview')}</h2>
           <div className="settings-group-card">
-            <Link to="/summary" className="setting-row top-customer-link">
+            <Link to="/summary" className="setting-row top-customer-link monthly-summary-link-row">
               <span className="setting-label flex items-center gap-2">
                 <BarChart3 size={18} className="text-muted" aria-hidden="true" />
                 <span>{t('monthlySummary')}</span>
               </span>
-              <span className="text-xs text-muted">→</span>
+              <span className="text-xs text-muted shrink-0" aria-hidden="true">→</span>
             </Link>
           </div>
         </section>
@@ -220,28 +220,28 @@ export function Settings() {
             <div className="template-presets-row">
               <button
                 type="button"
-                className="suggestion-chip"
+                className="template-preset-btn"
                 onClick={() => setReminderTemplate(REMINDER_PRESETS.en)}
               >
                 {t('presetEnglish')}
               </button>
               <button
                 type="button"
-                className="suggestion-chip"
+                className="template-preset-btn"
                 onClick={() => setReminderTemplate(REMINDER_PRESETS.ur)}
               >
                 {t('presetUrdu')}
               </button>
               <button
                 type="button"
-                className="suggestion-chip"
+                className="template-preset-btn"
                 onClick={() => setReminderTemplate(REMINDER_PRESETS.roman)}
               >
                 {t('presetRomanUrdu')}
               </button>
               <button
                 type="button"
-                className="suggestion-chip"
+                className="template-preset-btn"
                 onClick={() => setReminderTemplate(null)}
               >
                 {t('resetDefault')}

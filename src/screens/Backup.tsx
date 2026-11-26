@@ -65,7 +65,7 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
     setMessage('');
     try {
       const index = ledgerIndex(ledger);
-      const csv = customersToCsv(ledger.customers, index, prefs.numberFormat, t('currencyLabel'));
+      const csv = customersToCsv(ledger.customers, index);
       downloadCsvFile(`khata-customers-${new Date().toISOString().slice(0, 10)}.csv`, csv);
       setMessage(t('csvExported'));
     } catch {
@@ -77,12 +77,7 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
     setError('');
     setMessage('');
     try {
-      const csv = transactionsToCsv(
-        ledger.customers,
-        ledger.transactions,
-        prefs.numberFormat,
-        t('currencyLabel')
-      );
+      const csv = transactionsToCsv(ledger.customers, ledger.transactions);
       downloadCsvFile(`khata-transactions-${new Date().toISOString().slice(0, 10)}.csv`, csv);
       setMessage(t('csvExported'));
     } catch {

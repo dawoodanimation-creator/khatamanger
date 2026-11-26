@@ -1,8 +1,6 @@
 import type { Customer } from '../models/customer';
 import type { LedgerTransaction } from '../models/transaction';
 import type { ledgerIndex } from './balance';
-import { formatMoney } from './numberFormat';
-import type { NumberFormatMode } from './uiPrefs';
 
 type LedgerIndex = ReturnType<typeof ledgerIndex>;
 
@@ -18,27 +16,33 @@ function toCsvRow(cells: string[]): string {
   return cells.map(escapeCsvCell).join(',');
 }
 
-export function customersToCsv(
-  customers: Customer[],
-  index: LedgerIndex,
-  numberFormat: NumberFormatMode = 'pk',
-  currencyLabel = 'Rs'
-): string {
-  const header = toCsvRow(['ID', 'Name', 'Phone', 'Balance (Rs)', 'Note']);
+function paisaToPlainRupees(paisa: number): string {
+  const abs = Math.abs(paisa);
+  const whole = Math.floor(abs / 100);
+  const frac = String(abs % 100).padStart(2, '0');
+  return `${whole}.${frac}`;
+}
+
+export function customersToCsv(customers: Customer[], index: LedgerIndex): string {
+  const header = toCsvRow(['ID', 'Name', 'Phone', 'Balance', 'Direction', 'Note']);
   const rows = customers.map(c => {
     const balance = index.balances.get(c.id) ?? 0;
-    const status = balance > 0 ? 'Owes you' : balance < 0 ? 'You owe' : 'Settled';
-    const formatted = `${formatMoney(balance, currencyLabel, numberFormat)} (${status})`;
-    return toCsvRow([c.id, c.name, c.phone, formatted, c.note]);
+    const direction = balance > 0 ? 'receive' : balance < 0 ? 'pay' : 'settled';
+    return toCsvRow([
+      c.id,
+      c.name,
+      c.phone,
+      paisaToPlainRupees(balance),
+      direction,
+      c.note,
+    ]);
   });
   return [header, ...rows].join('\r\n');
 }
 
 export function transactionsToCsv(
   customers: Customer[],
-  transactions: LedgerTransaction[],
-  numberFormat: NumberFormatMode = 'pk',
-  currencyLabel = 'Rs'
+  transactions: LedgerTransaction[]
 ): string {
   const names = new Map(customers.map(c => [c.id, c.name]));
   const header = toCsvRow(['ID', 'Customer', 'Type', 'Amount', 'Date', 'Due Date', 'Note']);
@@ -47,7 +51,7 @@ export function transactionsToCsv(
       tx.id,
       names.get(tx.customerId) ?? tx.customerId,
       tx.kind === 'credit' ? 'Udhaar Diya' : 'Payment Mili',
-      formatMoney(tx.amountPaisa, currencyLabel, numberFormat),
+      paisaToPlainRupees(tx.amountPaisa),
       tx.date.slice(0, 10),
       tx.dueDate ? tx.dueDate.slice(0, 10) : '',
       tx.note,

@@ -7,12 +7,22 @@ import { computeMonthlySummary, type MonthTotals } from '../utils/monthlySummary
 import { formatMoney } from '../utils/numberFormat';
 import { customerPath } from '../utils/routes';
 
+function formatMonthHeading(monthKey: string, language: 'en' | 'ur'): string {
+  const [y, m] = monthKey.split('-').map(Number);
+  if (!y || !m) return monthKey;
+  return new Intl.DateTimeFormat(language === 'ur' ? 'ur-PK' : 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(y, m - 1, 1));
+}
+
 function MonthCard({
   title,
   data,
   hidden,
   numberFormat,
   currencyLabel,
+  language,
   t,
 }: {
   title: string;
@@ -20,6 +30,7 @@ function MonthCard({
   hidden: boolean;
   numberFormat: 'pk' | 'intl';
   currencyLabel: string;
+  language: 'en' | 'ur';
   t: (key: any) => string;
 }) {
   const maxVal = Math.max(data.creditPaisa, data.paymentPaisa, 1);
@@ -30,7 +41,7 @@ function MonthCard({
   return (
     <section className="settings-group">
       <h2 className="settings-group-title">
-        {title} ({data.monthKey})
+        {title} · {formatMonthHeading(data.monthKey, language)}
       </h2>
       <div className="settings-group-card settings-group-card-padded monthly-card">
         {!hasAny ? (
@@ -83,7 +94,7 @@ function MonthCard({
 export function MonthlySummary() {
   const { ledger } = useLedger();
   const { prefs } = useUiPrefs();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const hidden = !!ledger.settings.hideBalances;
   const summary = computeMonthlySummary(ledger);
 
@@ -98,6 +109,7 @@ export function MonthlySummary() {
           hidden={hidden}
           numberFormat={prefs.numberFormat}
           currencyLabel={t('currencyLabel')}
+          language={language}
           t={t}
         />
 
@@ -107,6 +119,7 @@ export function MonthlySummary() {
           hidden={hidden}
           numberFormat={prefs.numberFormat}
           currencyLabel={t('currencyLabel')}
+          language={language}
           t={t}
         />
 

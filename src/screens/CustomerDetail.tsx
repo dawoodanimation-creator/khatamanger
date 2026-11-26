@@ -386,7 +386,7 @@ export function CustomerDetail() {
                               <button
                                 type="button"
                                 className="entry-delete-btn"
-                                aria-label={t('deleteEntryTitle')}
+                                aria-label={t('deleteEntryLabel')}
                                 onClick={() => setTxToDelete(transaction)}
                               >
                                 <Trash2 size={14} aria-hidden="true" />

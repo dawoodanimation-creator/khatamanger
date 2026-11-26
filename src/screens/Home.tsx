@@ -152,8 +152,8 @@ export function Home() {
           </div>
 
           {ledger.customers.length > 0 && (
-            <div className="sort-control-wrapper">
-              <ArrowUpDown size={14} className="text-muted" aria-hidden="true" />
+            <div className="sort-control-wrapper" title={t('sortBy')}>
+              <ArrowUpDown size={18} className="text-muted" aria-hidden="true" />
               <select
                 className="sort-select-minimal"
                 aria-label={t('sortBy')}
