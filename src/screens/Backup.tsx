@@ -1,15 +1,21 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { Download, Upload, FileJson, CheckCircle2 } from 'lucide-react';
+import { Download, Upload, FileJson, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Modal } from '../components/Modal';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 import type { Ledger } from '../models/ledger';
+import { encodeLedger } from '../utils/backup';
+import { ledgerIndex } from '../utils/balance';
+import { customersToCsv, downloadCsvFile, transactionsToCsv } from '../utils/csvExport';
+import { localDate } from '../utils/dates';
 import { downloadBackup, readBackupFile } from '../utils/files';
 
 export function Backup({ embedded = false }: { embedded?: boolean }) {
   const { ledger, restore, revision, loadError, writeError } = useLedger();
-  const { t } = useI18n();
+  const { prefs, recordBackupNow } = useUiPrefs();
+  const { t, language } = useI18n();
   const input = useRef<HTMLInputElement>(null);
   const [candidate, setCandidate] = useState<{
     ledger: Ledger;
@@ -22,12 +28,63 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
   const [restored, setRestored] = useState(false);
   const reading = useRef(false);
 
-  function exportBackup() {
+  async function exportBackup() {
     setError('');
     setMessage('');
     try {
+      const json = encodeLedger(ledger);
+      const filename = `khata-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const file = new File([json], filename, { type: 'application/json' });
+
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          recordBackupNow();
+          setMessage(t('exported'));
+          return;
+        } catch (shareErr) {
+          if (shareErr instanceof Error && shareErr.name === 'AbortError') return;
+        }
+      }
+
       downloadBackup(ledger);
+      recordBackupNow();
       setMessage(t('downloadStarted'));
+    } catch {
+      setError(t('error'));
+    }
+  }
+
+  function exportCustomersCsv() {
+    setError('');
+    setMessage('');
+    try {
+      const index = ledgerIndex(ledger);
+      const csv = customersToCsv(ledger.customers, index, prefs.numberFormat, t('currencyLabel'));
+      downloadCsvFile(`khata-customers-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      setMessage(t('csvExported'));
+    } catch {
+      setError(t('error'));
+    }
+  }
+
+  function exportTransactionsCsv() {
+    setError('');
+    setMessage('');
+    try {
+      const csv = transactionsToCsv(
+        ledger.customers,
+        ledger.transactions,
+        prefs.numberFormat,
+        t('currencyLabel')
+      );
+      downloadCsvFile(`khata-transactions-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      setMessage(t('csvExported'));
     } catch {
       setError(t('error'));
     }
@@ -90,13 +147,20 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
         {/* Backup Actions Card */}
         <div className="backup-card">
           <p className="backup-description-text">{t('backupHelp')}</p>
+          <p className="text-xs text-muted last-backup-text">
+            {t('lastBackup', {
+              date: prefs.lastBackupAt
+                ? localDate(prefs.lastBackupAt.slice(0, 10), language)
+                : t('never'),
+            })}
+          </p>
 
           <div className="backup-buttons-row">
             <button
               type="button"
               className="button button-primary backup-primary-btn"
               disabled={busy || loadError}
-              onClick={exportBackup}
+              onClick={() => void exportBackup()}
             >
               <Download size={18} aria-hidden="true" />
               <span>{t('export')}</span>
@@ -114,6 +178,27 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
               <Upload size={18} aria-hidden="true" />
               <span>{t('import')}</span>
             </button>
+
+            <div className="csv-export-row">
+              <button
+                type="button"
+                className="button button-secondary csv-export-btn"
+                disabled={busy || loadError}
+                onClick={exportCustomersCsv}
+              >
+                <FileSpreadsheet size={16} aria-hidden="true" />
+                <span>{t('exportCsvCustomers')}</span>
+              </button>
+              <button
+                type="button"
+                className="button button-secondary csv-export-btn"
+                disabled={busy || loadError}
+                onClick={exportTransactionsCsv}
+              >
+                <FileSpreadsheet size={16} aria-hidden="true" />
+                <span>{t('exportCsvTransactions')}</span>
+              </button>
+            </div>
 
             <input
               ref={input}

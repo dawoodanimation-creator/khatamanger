@@ -1,6 +1,7 @@
 import { Eye, EyeOff } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { money } from '../utils/money';
+import { useUiPrefs } from '../state/UiPrefsContext';
+import { formatMoney } from '../utils/numberFormat';
 
 interface BalanceSummaryProps {
   outstanding: number;
@@ -11,8 +12,9 @@ interface BalanceSummaryProps {
 
 export function BalanceSummary({ outstanding, payable, hidden, onToggleHidden }: BalanceSummaryProps) {
   const { t } = useI18n();
-  const outstandingText = hidden ? '••••••' : money(outstanding, t('currencyLabel'));
-  const payableText = hidden ? '••••••' : money(payable, t('currencyLabel'));
+  const { prefs } = useUiPrefs();
+  const outstandingText = hidden ? '••••••' : formatMoney(outstanding, t('currencyLabel'), prefs.numberFormat);
+  const payableText = hidden ? '••••••' : formatMoney(payable, t('currencyLabel'), prefs.numberFormat);
   const shouldStack = !hidden && (outstandingText.length >= 13 || payableText.length >= 13);
 
   return (

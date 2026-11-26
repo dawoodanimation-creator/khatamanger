@@ -1,7 +1,8 @@
 import { ArrowDownLeft, ArrowUpRight, Check } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
-import { money } from '../utils/money';
+import { useUiPrefs } from '../state/UiPrefsContext';
+import { formatMoney } from '../utils/numberFormat';
 
 interface BalanceProps {
   paisa: number;
@@ -12,6 +13,7 @@ interface BalanceProps {
 export function Balance({ paisa, forceShow, customerName }: BalanceProps) {
   const { t } = useI18n();
   const { ledger } = useLedger();
+  const { prefs } = useUiPrefs();
   const hidden = !forceShow && !!ledger.settings.hideBalances;
 
   const isOwed = paisa > 0;
@@ -35,7 +37,7 @@ export function Balance({ paisa, forceShow, customerName }: BalanceProps) {
   return (
     <div className={`balance ${statusClass}`}>
       <bdi className="balance-amount" dir="ltr">
-        {hidden ? '••••••' : money(paisa, t('currencyLabel'))}
+        {hidden ? '••••••' : formatMoney(paisa, t('currencyLabel'), prefs.numberFormat)}
       </bdi>
       <span className="balance-direction">
         <Icon aria-hidden="true" />

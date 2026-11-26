@@ -1,6 +1,6 @@
 import { useI18n } from '../i18n';
 
-export type CustomerFilter = 'all' | 'receive' | 'pay' | 'settled';
+export type CustomerFilter = 'all' | 'receive' | 'pay' | 'settled' | 'overdue';
 
 interface FilterChipsProps {
   current: CustomerFilter;
@@ -10,6 +10,7 @@ interface FilterChipsProps {
     receive: number;
     pay: number;
     settled: number;
+    overdue?: number;
   };
 }
 
@@ -20,6 +21,9 @@ export function FilterChips({ current, onChange, counts }: FilterChipsProps) {
     { id: 'all', label: t('filterAll'), count: counts.all },
     { id: 'receive', label: t('filterReceive'), count: counts.receive },
     { id: 'pay', label: t('filterPay'), count: counts.pay },
+    ...(typeof counts.overdue === 'number'
+      ? [{ id: 'overdue' as const, label: t('filterOverdue'), count: counts.overdue }]
+      : []),
     { id: 'settled', label: t('filterSettled'), count: counts.settled },
   ];
 

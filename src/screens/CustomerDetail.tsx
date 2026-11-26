@@ -16,6 +16,8 @@ import {
   ChevronUp,
   ShoppingBag,
   Send,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import type { Ledger } from '../models/ledger';
 import { CustomerContext } from '../components/CustomerContext';
@@ -27,8 +29,10 @@ import { BottomSheet } from '../components/BottomSheet';
 import { MoreMenu } from '../components/MoreMenu';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 import { balanceFor, runningHistoryFor } from '../utils/balance';
-import { money } from '../utils/money';
+import { formatMoney } from '../utils/numberFormat';
+import { calculateCustomerOverdue } from '../utils/overdue';
 import { localDate, monthYearLabel } from '../utils/dates';
 import { customerPath } from '../utils/routes';
 import { reminderMessage, reminderLink } from '../utils/reminders';
@@ -38,6 +42,7 @@ import { getInitials } from '../utils/avatar';
 export function CustomerDetail() {
   const { customerId } = useParams();
   const { ledger, deleteCustomer, writeError } = useLedger();
+  const { prefs, togglePinCustomer } = useUiPrefs();
   const customer = ledger.customers.find(c => c.id === customerId);
   const { t, language } = useI18n();
   const navigate = useNavigate();
@@ -56,6 +61,12 @@ export function CustomerDetail() {
     () => (customer ? runningHistoryFor(ledger, customer.id).reverse() : []),
     [ledger, customer]
   );
+
+  const overdueResult = useMemo(
+    () => calculateCustomerOverdue(history.map(h => h.transaction)),
+    [history]
+  );
+  const isPinned = customer ? prefs.pinnedCustomerIds.includes(customer.id) : false;
 
   const groupedHistory = useMemo(() => {
     if (!customer) return [];
@@ -108,6 +119,11 @@ export function CustomerDetail() {
   }
 
   const moreMenuItems = [
+    {
+      label: t(isPinned ? 'unpinCustomer' : 'pinCustomer'),
+      icon: isPinned ? <PinOff size={16} /> : <Pin size={16} />,
+      onClick: () => togglePinCustomer(customer.id),
+    },
     {
       label: t('edit'),
       icon: <Edit3 size={16} />,
@@ -298,6 +314,11 @@ export function CustomerDetail() {
                             <time dateTime={transaction.date} className="entry-date-text">
                               {localDate(transaction.date, language)}
                             </time>
+                            {overdueResult.overdueCredits.has(transaction.id) && (
+                              <span className="overdue-pill-inline">
+                                {t('overdue')} · {overdueResult.overdueCredits.get(transaction.id)!.dueDate}
+                              </span>
+                            )}
                           </div>
 
                           <div className="entry-amount-col">
@@ -308,12 +329,12 @@ export function CustomerDetail() {
                               }`}
                             >
                               {isCredit ? '+' : '−'}{' '}
-                              {money(transaction.amountPaisa, t('currencyLabel'))}
+                              {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
                             </bdi>
                             <div className="running-balance-quiet">
                               <span>{t('running')}:</span>{' '}
                               <bdi dir="ltr" className="running-amount">
-                                {money(balancePaisa, t('currencyLabel'))}
+                                {formatMoney(balancePaisa, t('currencyLabel'), prefs.numberFormat)}
                               </bdi>
                             </div>
                           </div>
@@ -353,7 +374,7 @@ export function CustomerDetail() {
                                     {item.pricePaisa !== undefined && (
                                       <span className="item-entry-meta">
                                         <bdi dir="ltr">
-                                          {money(item.pricePaisa, t('currencyLabel'))}
+                                          {formatMoney(item.pricePaisa, t('currencyLabel'), prefs.numberFormat)}
                                         </bdi>
                                       </span>
                                     )}

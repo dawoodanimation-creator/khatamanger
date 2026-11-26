@@ -685,5 +685,25 @@ bdi[dir=ltr], .reminder-message, .entry-amount { line-height: var(--type-line-bo
 [data-theme=dark] .customer-form-sticky-bar,
 [data-theme=dark] .transaction-form-sticky-bar { border-top-color: #262626; }
 
+/* Priority 1: Backup Banner, Sort Control, Pin, Overdue Pill, CSV Export */
+.backup-reminder-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-s2); padding: 0 var(--space-s3); min-height: 44px; margin-bottom: var(--space-s3); border: 1px solid var(--color-border-subtle, #e5e5e5); border-radius: var(--radius-control); background: var(--color-surface-muted); font-size: var(--type-size-xs); }
+[data-theme=dark] .backup-reminder-banner { border-color: #262626; }
+.backup-banner-link { color: var(--color-primary); font-weight: var(--type-weight-medium); text-decoration: none; flex: 1; padding: var(--space-s2) 0; }
+.backup-banner-link:hover { text-decoration: underline; }
+.backup-banner-dismiss { border: 0; background: transparent; color: var(--color-muted); cursor: pointer; min-width: 44px; min-height: 44px; display: grid; place-items: center; margin-inline-end: -10px; }
+
+.search-sort-row { display: flex; align-items: center; gap: var(--space-s2); margin-top: var(--space-s3); }
+.search-sort-row .search-field { flex: 1 1 auto; min-width: 0; margin-top: 0; }
+.sort-control-wrapper { position: relative; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--color-border-subtle, #e5e5e5); border-radius: var(--radius-control); background: var(--color-surface); padding: 0 var(--space-s2); min-height: 46px; height: 46px; flex-shrink: 0; }
+[data-theme=dark] .sort-control-wrapper { border-color: #262626; }
+.sort-select-minimal { border: 0; background: transparent; color: var(--color-text); font-size: var(--type-size-xs); font-weight: var(--type-weight-medium); padding: 0; min-height: 44px; max-width: 112px; outline: none; cursor: pointer; }
+
+.customer-name-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.customer-pin-icon { color: var(--color-primary); flex-shrink: 0; }
+.overdue-pill-inline { display: inline-flex; align-items: center; color: var(--color-owed); font-size: 11px; font-weight: var(--type-weight-semibold); white-space: nowrap; }
+.last-backup-text { margin-top: var(--space-s2); }
+.csv-export-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-s2); width: 100%; margin-top: var(--space-s2); }
+.csv-export-btn { min-height: 48px; font-size: var(--type-size-xs) !important; padding: 0 var(--space-s2) !important; }
+
 
 

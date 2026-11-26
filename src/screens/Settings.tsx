@@ -15,9 +15,11 @@ import { Header } from '../components/Header';
 import { Modal } from '../components/Modal';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 
 export function Settings() {
   const { ledger, updateSettings } = useLedger();
+  const { prefs, setNumberFormat } = useUiPrefs();
   const { t } = useI18n();
   const settings = ledger.settings;
 
@@ -103,6 +105,30 @@ export function Settings() {
               >
                 <span />
               </button>
+            </div>
+
+            {/* Number Format */}
+            <div className="setting-row flex-wrap">
+              <span className="setting-label flex items-center gap-2">
+                <span>{t('numberFormat')}</span>
+              </span>
+
+              <div className="language-switch" role="group" aria-label={t('numberFormat')}>
+                <button
+                  type="button"
+                  aria-pressed={prefs.numberFormat === 'pk'}
+                  onClick={() => setNumberFormat('pk')}
+                >
+                  75,83,535
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={prefs.numberFormat === 'intl'}
+                  onClick={() => setNumberFormat('intl')}
+                >
+                  7,583,535
+                </button>
+              </div>
             </div>
           </div>
         </section>

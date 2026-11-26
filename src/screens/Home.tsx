@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, UserPlus, X } from 'lucide-react';
+import { ArrowUpDown, Search, UserPlus, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { ReviewControls } from '../components/ReviewControls';
 import { Header } from '../components/Header';
@@ -7,58 +7,83 @@ import { BalanceSummary } from '../components/BalanceSummary';
 import { FilterChips, type CustomerFilter } from '../components/FilterChips';
 import { CustomerCard } from '../components/CustomerCard';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 import { useI18n } from '../i18n';
 import { ledgerIndex } from '../utils/balance';
 import { phoneMatches } from '../utils/phone';
+import { sortCustomers } from '../utils/customerSort';
+import { calculateCustomerOverdue } from '../utils/overdue';
+import { localDayString, shouldShowBackupBanner } from '../utils/backupHelper';
+import type { SortOrder } from '../utils/uiPrefs';
 
 export function Home() {
   const { ledger, updateSettings } = useLedger();
+  const { prefs, setSortOrder, dismissBackupBannerToday } = useUiPrefs();
   const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('all');
 
   const index = ledgerIndex(ledger);
   const hidden = !!ledger.settings.hideBalances;
+  const todayStr = localDayString();
+
+  const overdueByCustomer = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const c of ledger.customers) {
+      const history = index.histories.get(c.id) ?? [];
+      const res = calculateCustomerOverdue(
+        history.map(h => h.transaction),
+        todayStr
+      );
+      if (res.isOverdue) map.set(c.id, res.earliestDueDate);
+    }
+    return map;
+  }, [ledger.customers, index.histories, todayStr]);
 
   const sorted = useMemo(
-    () =>
-      [...ledger.customers].sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-      ),
-    [ledger.customers]
+    () => sortCustomers(ledger.customers, index, prefs.sortOrder, prefs.pinnedCustomerIds),
+    [ledger.customers, index, prefs.sortOrder, prefs.pinnedCustomerIds]
   );
 
   const counts = useMemo(() => {
     let receive = 0;
     let pay = 0;
     let settled = 0;
+    let overdue = 0;
     for (const c of ledger.customers) {
       const bal = index.balances.get(c.id) ?? 0;
       if (bal > 0) receive++;
       else if (bal < 0) pay++;
       else settled++;
+      if (overdueByCustomer.has(c.id)) overdue++;
     }
-    return { all: ledger.customers.length, receive, pay, settled };
-  }, [ledger.customers, index.balances]);
+    return { all: ledger.customers.length, receive, pay, settled, overdue };
+  }, [ledger.customers, index.balances, overdueByCustomer]);
 
   const matchingCustomers = useMemo(() => {
     const search = query.trim().toLowerCase();
     return sorted.filter(c => {
-      // 1. Search text match
       const matchesSearch =
         !search ||
         c.name.toLowerCase().includes(search) ||
         phoneMatches(c.phone, search);
       if (!matchesSearch) return false;
 
-      // 2. Filter status match
       const bal = index.balances.get(c.id) ?? 0;
       if (filter === 'receive') return bal > 0;
       if (filter === 'pay') return bal < 0;
       if (filter === 'settled') return bal === 0;
+      if (filter === 'overdue') return overdueByCustomer.has(c.id);
       return true;
     });
-  }, [sorted, query, filter, index.balances]);
+  }, [sorted, query, filter, index.balances, overdueByCustomer]);
+
+  const pinnedSet = useMemo(() => new Set(prefs.pinnedCustomerIds), [prefs.pinnedCustomerIds]);
+  const showBackupBanner = shouldShowBackupBanner(
+    ledger.customers.length > 0 || ledger.transactions.length > 0,
+    prefs.lastBackupAt,
+    prefs.backupBannerDismissedDate
+  );
 
   const matchesSet = useMemo(
     () => new Set(matchingCustomers.map(c => c.id)),
@@ -85,26 +110,62 @@ export function Home() {
           onToggleHidden={() => updateSettings({ hideBalances: !hidden })}
         />
 
-        {/* Search Bar: Single row, light grey fill, 48px high */}
-        <div className="search-field flex items-center gap-2">
-          <Search aria-hidden="true" className="search-icon" size={18} />
-          <input
-            type="search"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            aria-label={t('search')}
-            placeholder={t('search')}
-            className="search-input-minimal"
-          />
-          {query && (
+        {/* Quiet 7-day backup reminder banner */}
+        {showBackupBanner && (
+          <div className="backup-reminder-banner" role="status">
+            <Link to="/settings/backup" className="backup-banner-link">
+              {t('backupBannerText')}
+            </Link>
             <button
               type="button"
-              className="search-clear-btn"
-              aria-label="Clear search"
-              onClick={() => setQuery('')}
+              className="backup-banner-dismiss"
+              aria-label={t('dismiss')}
+              onClick={() => dismissBackupBannerToday(todayStr)}
             >
               <X size={16} aria-hidden="true" />
             </button>
+          </div>
+        )}
+
+        {/* Search Bar + Sort Control */}
+        <div className="search-sort-row">
+          <div className="search-field flex items-center gap-2">
+            <Search aria-hidden="true" className="search-icon" size={18} />
+            <input
+              type="search"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              aria-label={t('search')}
+              placeholder={t('search')}
+              className="search-input-minimal"
+            />
+            {query && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                aria-label="Clear search"
+                onClick={() => setQuery('')}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          {ledger.customers.length > 0 && (
+            <div className="sort-control-wrapper">
+              <ArrowUpDown size={14} className="text-muted" aria-hidden="true" />
+              <select
+                className="sort-select-minimal"
+                aria-label={t('sortBy')}
+                value={prefs.sortOrder}
+                onChange={e => setSortOrder(e.target.value as SortOrder)}
+              >
+                <option value="recent">{t('sortRecent')}</option>
+                <option value="highest">{t('sortHighest')}</option>
+                <option value="name">{t('sortName')}</option>
+                <option value="oldest">{t('sortOldest')}</option>
+              </select>
+            </div>
           )}
         </div>
 
@@ -161,6 +222,8 @@ export function Home() {
                     customer={customer}
                     balance={balance}
                     lastActivityDate={latestTx?.date}
+                    isPinned={pinnedSet.has(customer.id)}
+                    overdueDueDate={overdueByCustomer.get(customer.id) ?? null}
                   />
                 </div>
               );

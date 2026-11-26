@@ -3,6 +3,7 @@ import { Routes, Route, useLocation, Link } from 'react-router';
 import { BookOpen, ShieldCheck, Lock } from 'lucide-react';
 import { useI18n } from './i18n';
 import { useLedger } from './state/LedgerContext';
+import { UiPrefsProvider } from './state/UiPrefsContext';
 import { themeVariables, tokens } from './theme/tokens';
 import { Home } from './screens/Home';
 import { Settings } from './screens/Settings';
@@ -49,7 +50,7 @@ export default function App() {
     heading?.setAttribute('tabindex', '-1');
     heading?.focus({ preventScroll: true });
   }, [location.pathname]);
-  return <div className="preview-layout">
+  return <UiPrefsProvider><div className="preview-layout">
     <aside className="preview-intro text-center"><div className="preview-eyebrow flex items-center justify-center gap-3"><span className="preview-dot" />{t('previewLabel')}<span className="stage-badge">{t('previewStep')}</span></div>
       <h2>{t('previewTitle')}</h2><p>{t('previewDescription')}</p>
     </aside>
@@ -115,5 +116,5 @@ export default function App() {
       </main><div className="phone-home-bar" aria-hidden="true" />
     </div></div>
     <footer className="preview-footer text-center"><p>{t('previewScope')}</p><p className="flex items-center justify-center gap-2"><ShieldCheck aria-hidden="true"/>{t('previewFooter')}</p></footer>
-  </div>;
+  </div></UiPrefsProvider>;
 }

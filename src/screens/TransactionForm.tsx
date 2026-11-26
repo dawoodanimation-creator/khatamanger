@@ -10,12 +10,13 @@ import {
 } from 'lucide-react';
 import { Balance } from '../components/Balance';
 import { balanceFor, exactAdd } from '../utils/balance';
-import { money } from '../utils/money';
+import { formatMoney } from '../utils/numberFormat';
 import { Header } from '../components/Header';
 import { MissingCustomer } from '../components/MissingCustomer';
 import type { TransactionItem, TransactionKind } from '../models/transaction';
 import { useI18n, type TranslationKey } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 import { newId } from '../utils/ids';
 import { customerPath } from '../utils/routes';
 import { parseAmount } from '../utils/money';
@@ -25,6 +26,7 @@ import { getInitials } from '../utils/avatar';
 export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const { customerId } = useParams();
   const { ledger, addTransaction, writeError } = useLedger();
+  const { prefs } = useUiPrefs();
   const customer = ledger.customers.find(c => c.id === customerId);
   const { t, language } = useI18n();
   const navigate = useNavigate();
@@ -259,7 +261,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           {previewAmount !== null && (
             <div className="amount-live-preview">
               <span>=</span>
-              <strong>{money(previewAmount, t('currencyLabel'))}</strong>
+              <strong>{formatMoney(previewAmount, t('currencyLabel'), prefs.numberFormat)}</strong>
             </div>
           )}
 
@@ -506,7 +508,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
                     onClick={() => setAmount((itemsTotalPaisa / 100).toFixed(2))}
                   >
                     {t('calculateTotalFromItems')}:{' '}
-                    <bdi dir="ltr">{money(itemsTotalPaisa, t('currencyLabel'))}</bdi>
+                    <bdi dir="ltr">{formatMoney(itemsTotalPaisa, t('currencyLabel'), prefs.numberFormat)}</bdi>
                   </button>
                 )}
               </div>
@@ -573,14 +575,14 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           {previewAmount !== null && (
             <div className="sticky-balance-preview-box money-review">
               <span className="sr-only">
-                {money(previewAmount, t('currencyLabel'))}
+                {formatMoney(previewAmount, t('currencyLabel'), prefs.numberFormat)}
               </span>
               <span className="preview-label">{t('newBalance')}:</span>
               <strong className="preview-balance-value">
                 {projected === null ? (
                   <span className="field-error text-xs">{t('balanceRangeError')}</span>
                 ) : (
-                  money(projected, t('currencyLabel'))
+                  formatMoney(projected, t('currencyLabel'), prefs.numberFormat)
                 )}
               </strong>
             </div>
