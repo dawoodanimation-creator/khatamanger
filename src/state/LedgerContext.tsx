@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { emptyLedger, type AppSettings, type Ledger } from '../models/ledger';
 import type { Customer } from '../models/customer';
 import type { LedgerTransaction } from '../models/transaction';
+import type { CategoryBudget, Expense, ExpenseCategory } from '../models/expense';
 import { CommitConflict, LockUnavailable, decodeStored, serializedWrite, STORAGE_KEY, writeLedger } from './storage';
 import type { TranslationKey } from '../i18n';
 import { balanceFor } from '../utils/balance';
@@ -14,6 +15,10 @@ interface LedgerState {
   deleteCustomer: (id: string, expected: Ledger) => Promise<boolean>;
   addTransaction: (transaction: LedgerTransaction, expected: Customer) => Promise<boolean>;
   deleteTransaction: (id: string, customerId: string) => Promise<boolean>;
+  saveExpense: (expense: Expense) => Promise<boolean>;
+  deleteExpense: (id: string) => Promise<boolean>;
+  saveExpenseCategories: (categories: ExpenseCategory[]) => Promise<boolean>;
+  saveBudgets: (budgets: CategoryBudget[]) => Promise<boolean>;
   restore: (ledger: Ledger, expected: string | null) => Promise<boolean>;
   replaceRecords: (ledger: Pick<Ledger, 'customers' | 'transactions'>, expected: string | null) => Promise<boolean>;
 }
@@ -87,6 +92,10 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
       if (balanceFor(data, customerId) !== balanceFor(ledger, customerId)) throw new CommitConflict();
       return mutations.deleteTransaction(data, id);
     }),
+    saveExpense: expense => commit(data => mutations.saveExpense(data, expense)),
+    deleteExpense: id => commit(data => mutations.deleteExpense(data, id)),
+    saveExpenseCategories: categories => commit(data => mutations.saveExpenseCategories(data, categories)),
+    saveBudgets: budgets => commit(data => mutations.saveBudgets(data, budgets)),
     restore: (data, expected) => commit(() => data, { data, expected }),
     replaceRecords: (records, expected) => {
       return commit(data => {

@@ -8,7 +8,7 @@ function valid() { return {
   settings: { language: 'en', darkMode: false },
 }; }
 test('unknown schema, duplicates and orphan transactions are rejected', () => {
-  const schema = { ...valid(), schemaVersion: 2 };
+  const schema = { ...valid(), schemaVersion: 99 };
   const duplicate = valid(); duplicate.customers.push(duplicate.customers[0]);
   const orphan = valid(); orphan.transactions[0].customerId = 'absent';
   for (const data of [schema, duplicate, orphan]) expect(() => decodeLedger(JSON.stringify(data))).toThrow();

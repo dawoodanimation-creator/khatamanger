@@ -1,5 +1,5 @@
 import type { Customer } from '../models/customer';
-import type { Language } from '../models/ledger';
+import type { Language, ProfileSettings } from '../models/ledger';
 import type { HistoryEntry } from './balance';
 import { localDate } from './dates';
 import { formatMoney } from './numberFormat';
@@ -12,17 +12,22 @@ export function buildStatementWhatsAppText(
   currentBalance: number,
   currencyLabel: string,
   numberFormat: NumberFormatMode,
-  language: Language
+  language: Language,
+  profile?: ProfileSettings
 ): string {
   const isUrdu = language === 'ur';
   const recent = history.slice(-20);
   const lines: string[] = [];
 
-  lines.push(
-    isUrdu
+  const title = profile?.shopName
+    ? `*${profile.shopName}*`
+    : isUrdu
       ? `*کھاتہ مینیجر - حساب کی تفصیل*`
-      : `*Khata Manager - Account Statement*`
-  );
+      : `*Khata Manager - Account Statement*`;
+  lines.push(title);
+  if (profile?.ownerName || profile?.phone) {
+    lines.push([profile.ownerName, profile.phone].filter(Boolean).join(' • '));
+  }
   lines.push(`${isUrdu ? 'گاہک' : 'Customer'}: ${customer.name}`);
   lines.push(
     `${isUrdu ? 'موجودہ بقایا' : 'Current balance'}: ${formatMoney(
@@ -65,7 +70,8 @@ export function statementWhatsAppLink(
   currentBalance: number,
   currencyLabel: string,
   numberFormat: NumberFormatMode,
-  language: Language
+  language: Language,
+  profile?: ProfileSettings
 ): string {
   const text = buildStatementWhatsAppText(
     customer,
@@ -73,7 +79,8 @@ export function statementWhatsAppLink(
     currentBalance,
     currencyLabel,
     numberFormat,
-    language
+    language,
+    profile
   );
   const phone = whatsAppPhone(customer.phone);
   return phone

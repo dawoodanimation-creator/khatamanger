@@ -1,6 +1,8 @@
 import type { Customer } from '../models/customer';
 import type { LedgerTransaction } from '../models/transaction';
+import type { Expense, ExpenseCategory } from '../models/expense';
 import type { ledgerIndex } from './balance';
+import { getCategoryLabel } from './expenseCategories';
 
 type LedgerIndex = ReturnType<typeof ledgerIndex>;
 
@@ -55,6 +57,27 @@ export function transactionsToCsv(
       tx.date.slice(0, 10),
       tx.dueDate ? tx.dueDate.slice(0, 10) : '',
       tx.note,
+    ])
+  );
+  return [header, ...rows].join('\r\n');
+}
+
+export function expensesToCsv(
+  expenses: Expense[],
+  categories: ExpenseCategory[],
+  language: 'en' | 'ur' = 'en'
+): string {
+  const catMap = new Map(categories.map(c => [c.id, c]));
+  const header = toCsvRow(['ID', 'Type', 'Category', 'Amount', 'Date', 'Payment Method', 'Note']);
+  const rows = expenses.map(exp =>
+    toCsvRow([
+      exp.id,
+      exp.kind === 'expense' ? 'Expense' : 'Income',
+      getCategoryLabel(catMap.get(exp.categoryId), language, exp.categoryId),
+      paisaToPlainRupees(exp.amountPaisa),
+      exp.date.slice(0, 10),
+      exp.paymentMethod ?? '',
+      exp.note,
     ])
   );
   return [header, ...rows].join('\r\n');

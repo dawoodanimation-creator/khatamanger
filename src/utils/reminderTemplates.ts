@@ -1,4 +1,5 @@
 import type { Customer } from '../models/customer';
+import type { ProfileSettings } from '../models/ledger';
 import { translate } from '../i18n';
 import { formatMoney } from './numberFormat';
 import { latinDigits } from './phone';
@@ -28,10 +29,13 @@ export function buildCustomReminderMessage(
   balance: number,
   template: string | null,
   numberFormat: NumberFormatMode,
-  currencyLabel: string
+  currencyLabel: string,
+  profile?: ProfileSettings
 ): string {
   const formattedAmount = formatMoney(balance, currencyLabel, numberFormat);
-  return formatReminderWithTemplate(template, customer.name, formattedAmount);
+  const base = formatReminderWithTemplate(template, customer.name, formattedAmount);
+  const sigParts = [profile?.shopName, profile?.ownerName, profile?.phone].filter(Boolean);
+  return sigParts.length > 0 ? `${base} (${sigParts.join(' - ')})` : base;
 }
 
 export function buildCustomReminderLink(
@@ -40,7 +44,8 @@ export function buildCustomReminderLink(
   whatsapp: boolean,
   template: string | null,
   numberFormat: NumberFormatMode,
-  currencyLabel: string
+  currencyLabel: string,
+  profile?: ProfileSettings
 ): string | null {
   if (balance <= 0) return null;
   const phone = whatsapp
@@ -52,7 +57,8 @@ export function buildCustomReminderLink(
     balance,
     template,
     numberFormat,
-    currencyLabel
+    currencyLabel,
+    profile
   );
   return whatsapp
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
