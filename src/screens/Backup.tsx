@@ -8,7 +8,8 @@ import { useUiPrefs } from '../state/UiPrefsContext';
 import type { Ledger } from '../models/ledger';
 import { encodeLedger } from '../utils/backup';
 import { ledgerIndex } from '../utils/balance';
-import { customersToCsv, downloadCsvFile, transactionsToCsv } from '../utils/csvExport';
+import { customersToCsv, downloadCsvFile, expensesToCsv, transactionsToCsv } from '../utils/csvExport';
+import { resolveExpenseCategories } from '../utils/expenseCategories';
 import { localDate } from '../utils/dates';
 import { downloadBackup, readBackupFile } from '../utils/files';
 
@@ -79,6 +80,19 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
     try {
       const csv = transactionsToCsv(ledger.customers, ledger.transactions);
       downloadCsvFile(`khata-transactions-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      setMessage(t('csvExported'));
+    } catch {
+      setError(t('error'));
+    }
+  }
+
+  function exportExpensesCsv() {
+    setError('');
+    setMessage('');
+    try {
+      const cats = resolveExpenseCategories(ledger.expenseCategories);
+      const csv = expensesToCsv(ledger.expenses ?? [], cats, language);
+      downloadCsvFile(`khata-expenses-${new Date().toISOString().slice(0, 10)}.csv`, csv);
       setMessage(t('csvExported'));
     } catch {
       setError(t('error'));
@@ -192,6 +206,15 @@ export function Backup({ embedded = false }: { embedded?: boolean }) {
               >
                 <FileSpreadsheet size={16} aria-hidden="true" />
                 <span>{t('exportCsvTransactions')}</span>
+              </button>
+              <button
+                type="button"
+                className="button button-secondary csv-export-btn"
+                disabled={busy || loadError}
+                onClick={exportExpensesCsv}
+              >
+                <FileSpreadsheet size={16} aria-hidden="true" />
+                <span>{t('exportCsvExpenses')}</span>
               </button>
             </div>
 

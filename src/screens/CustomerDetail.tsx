@@ -100,7 +100,8 @@ export function CustomerDetail() {
     true,
     prefs.reminderTemplate,
     prefs.numberFormat,
-    t('currencyLabel')
+    t('currencyLabel'),
+    ledger.settings.profile
   );
   const sms = buildCustomReminderLink(
     customer,
@@ -108,14 +109,16 @@ export function CustomerDetail() {
     false,
     prefs.reminderTemplate,
     prefs.numberFormat,
-    t('currencyLabel')
+    t('currencyLabel'),
+    ledger.settings.profile
   );
   const customReminderText = buildCustomReminderMessage(
     customer,
     balance,
     prefs.reminderTemplate,
     prefs.numberFormat,
-    t('currencyLabel')
+    t('currencyLabel'),
+    ledger.settings.profile
   );
   const chronologicalHistory = runningHistoryFor(ledger, customer.id);
   const statementWaHref = statementWhatsAppLink(
@@ -124,7 +127,8 @@ export function CustomerDetail() {
     balance,
     t('currencyLabel'),
     prefs.numberFormat,
-    language
+    language,
+    ledger.settings.profile
   );
 
   const categoryLabels: Record<string, string> = {

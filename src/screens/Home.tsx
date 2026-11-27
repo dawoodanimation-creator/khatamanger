@@ -288,10 +288,10 @@ export function Home() {
         )}
       </div>
 
-      {/* Fixed Full-Width Bottom Bar with Soft Fade Above */}
-      <div className="home-actions">
+      {/* Extended Floating Add Customer Button Above Bottom Nav */}
+      <div className="fab-above-nav-wrap">
         <Link
-          className="button button-primary add-customer-main-btn"
+          className="button button-primary fab-extended-above-nav"
           to="/customers/new"
         >
           <UserPlus size={18} aria-hidden="true" />

@@ -8,8 +8,11 @@ import {
   ChevronUp,
   FlaskConical,
   KeyRound,
-  BarChart3
+  BarChart3,
+  Tag,
+  UserCircle2
 } from 'lucide-react';
+import { formatPakistaniPhoneInput } from '../utils/phone';
 import { Link } from 'react-router';
 import { Backup } from './Backup';
 import { ReviewControls } from '../components/ReviewControls';
@@ -56,8 +59,71 @@ export function Settings() {
     <>
       <Header title={t('settings')} backTo="/" />
 
-      <div className="page-content settings-content">
-        {/* Section 1: Appearance */}
+      <div className="page-content settings-content settings-with-nav">
+        {/* Section 1: Profile */}
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('profileSection')}</h2>
+          <div className="settings-group-card settings-group-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <UserCircle2 size={18} aria-hidden="true" />
+              <span>{t('onboardingProfileStep')}</span>
+            </div>
+            <div className="form-field">
+              <label htmlFor="profile-shop">{t('shopName')}</label>
+              <input
+                id="profile-shop"
+                className="form-control-input"
+                value={settings.profile?.shopName ?? ''}
+                onChange={e =>
+                  updateSettings({
+                    profile: { ...settings.profile, shopName: e.target.value },
+                  })
+                }
+                maxLength={100}
+                dir="auto"
+                placeholder={t('shopName')}
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="profile-owner">{t('ownerName')}</label>
+              <input
+                id="profile-owner"
+                className="form-control-input"
+                value={settings.profile?.ownerName ?? ''}
+                onChange={e =>
+                  updateSettings({
+                    profile: { ...settings.profile, ownerName: e.target.value },
+                  })
+                }
+                maxLength={100}
+                dir="auto"
+                placeholder={t('ownerName')}
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="profile-phone">{t('phone')}</label>
+              <input
+                id="profile-phone"
+                className="form-control-input"
+                type="tel"
+                inputMode="tel"
+                dir="ltr"
+                value={settings.profile?.phone ?? ''}
+                onChange={e =>
+                  updateSettings({
+                    profile: {
+                      ...settings.profile,
+                      phone: formatPakistaniPhoneInput(e.target.value),
+                    },
+                  })
+                }
+                placeholder="03XX-XXXXXXX"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: Appearance */}
         <section className="settings-group">
           <h2 className="settings-group-title">{t('appearance')}</h2>
           <div className="settings-group-card">
@@ -247,6 +313,20 @@ export function Settings() {
                 {t('resetDefault')}
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* Section 5: Categories */}
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t('categoriesSection')}</h2>
+          <div className="settings-group-card">
+            <Link to="/settings/categories" className="setting-row top-customer-link monthly-summary-link-row">
+              <span className="setting-label flex items-center gap-2">
+                <Tag size={18} className="text-muted" aria-hidden="true" />
+                <span>{t('categoriesSection')}</span>
+              </span>
+              <span className="text-xs text-muted shrink-0" aria-hidden="true">→</span>
+            </Link>
           </div>
         </section>
 

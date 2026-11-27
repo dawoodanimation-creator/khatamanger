@@ -12,6 +12,12 @@ import { CustomerDetail } from './screens/CustomerDetail';
 import { TransactionForm } from './screens/TransactionForm';
 import { Backup } from './screens/Backup';
 import { MonthlySummary } from './screens/MonthlySummary';
+import { ExpensesHome } from './screens/ExpensesHome';
+import { ExpenseForm } from './screens/ExpenseForm';
+import { ExpenseReports } from './screens/ExpenseReports';
+import { ExpenseCategoriesSettings } from './screens/ExpenseCategoriesSettings';
+import { BottomNav } from './components/BottomNav';
+import { Onboarding } from './components/Onboarding';
 export default function App() {
   const { t, language, direction } = useI18n();
   const { ledger, loadError, storageError } = useLedger();
@@ -20,6 +26,7 @@ export default function App() {
   const [enteredPin, setEnteredPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [swUpdateReady, setSwUpdateReady] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   useEffect(() => {
     const onSwUpdate = () => setSwUpdateReady(true);
@@ -120,8 +127,18 @@ export default function App() {
             <Route path="/customers/:customerId/credit" element={<TransactionForm kind="credit"/>}/>
             <Route path="/customers/:customerId/payment" element={<TransactionForm kind="payment"/>}/>
             <Route path="/settings/backup" element={<Backup/>}/>
+            <Route path="/settings/categories" element={<ExpenseCategoriesSettings/>}/>
+            <Route path="/expenses" element={<ExpensesHome/>}/>
+            <Route path="/expenses/new" element={<ExpenseForm/>}/>
+            <Route path="/expenses/:expenseId/edit" element={<ExpenseForm/>}/>
+            <Route path="/expenses/reports" element={<ExpenseReports/>}/>
             <Route path="*" element={<div className="page-content empty-state"><h1>{t('notFound')}</h1><Link to="/" className="button button-primary">{t('home')}</Link></div>}/>
-          </Routes>{swUpdateReady && <div className="undo-snackbar" role="status"><span>{t('updateAvailable')}</span><button type="button" className="undo-snackbar-btn" onClick={() => window.location.reload()}>{t('reload')}</button></div>}{storageError && <p className="storage-error" role="alert">{t(storageError)}</p>}</>}
+          </Routes>
+          {['/', '/expenses', '/settings', '/summary', '/expenses/reports'].includes(location.pathname) && <BottomNav/>}
+          {!onboardingDismissed && !ledger.settings.onboarded && ledger.customers.length === 0 && ledger.transactions.length === 0 && (ledger.expenses?.length ?? 0) === 0 && location.pathname === '/' && (
+            <Onboarding onDismissed={() => setOnboardingDismissed(true)}/>
+          )}
+          {swUpdateReady && <div className="undo-snackbar" role="status"><span>{t('updateAvailable')}</span><button type="button" className="undo-snackbar-btn" onClick={() => window.location.reload()}>{t('reload')}</button></div>}{storageError && <p className="storage-error" role="alert">{t(storageError)}</p>}</>}
       </main><div className="phone-home-bar" aria-hidden="true" />
     </div></div>
     <footer className="preview-footer text-center"><p>{t('previewScope')}</p><p className="flex items-center justify-center gap-2"><ShieldCheck aria-hidden="true"/>{t('previewFooter')}</p></footer>
