@@ -23,6 +23,8 @@ import { useLedger } from '../state/LedgerContext';
 import { useUiPrefs } from '../state/UiPrefsContext';
 import { REMINDER_PRESETS } from '../utils/reminderTemplates';
 
+declare const __COMMIT_HASH__: string;
+
 export function Settings() {
   const { ledger, updateSettings } = useLedger();
   const { prefs, setNumberFormat, setReminderTemplate } = useUiPrefs();
@@ -367,7 +369,9 @@ export function Settings() {
 
             <div className="setting-row">
               <span className="text-muted text-sm">App Version</span>
-              <span className="app-version-badge">{t('appVersion')}</span>
+              <span className="app-version-badge">
+                {t('appVersion')} ({typeof __COMMIT_HASH__ !== 'undefined' ? __COMMIT_HASH__ : 'dev'})
+              </span>
             </div>
           </div>
 

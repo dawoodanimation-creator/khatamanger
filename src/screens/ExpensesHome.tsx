@@ -87,6 +87,17 @@ export function ExpensesHome() {
   const dayGroups = useMemo(() => groupExpensesByDay(filtered), [filtered]);
   const moneyText = (paisa: number) =>
     hidden ? '••••••' : formatMoney(paisa, t('currencyLabel'), prefs.numberFormat);
+  const incomeStr = moneyText(summary.incomePaisa);
+  const netStr = hidden
+    ? '••••••'
+    : `${summary.netPaisa < 0 ? '− ' : ''}${formatMoney(
+        Math.abs(summary.netPaisa),
+        t('currencyLabel'),
+        prefs.numberFormat
+      )}`;
+  const todayStr = moneyText(summary.todaySpentPaisa);
+  const stackSubgrid =
+    !hidden && (incomeStr.length >= 11 || netStr.length >= 11 || todayStr.length >= 11);
 
   return (
     <>
@@ -134,29 +145,23 @@ export function ExpensesHome() {
               {moneyText(summary.spentPaisa)}
             </bdi>
           </div>
-          <div className="expense-hero-subgrid">
+          <div className={`expense-hero-subgrid ${stackSubgrid ? 'expense-hero-subgrid-stacked' : ''}`}>
             <div className="expense-hero-stat">
               <span className="summary-label">{t('incomeThisMonth')}</span>
-              <bdi dir="ltr" className="font-semibold expense-income-text">
-                {moneyText(summary.incomePaisa)}
+              <bdi dir="ltr" className="font-semibold expense-income-text expense-stat-amount">
+                {incomeStr}
               </bdi>
             </div>
             <div className="expense-hero-stat">
               <span className="summary-label">{t('netBalance')}</span>
-              <bdi dir="ltr" className="font-semibold">
-                {hidden
-                  ? '••••••'
-                  : `${summary.netPaisa < 0 ? '− ' : ''}${formatMoney(
-                      Math.abs(summary.netPaisa),
-                      t('currencyLabel'),
-                      prefs.numberFormat
-                    )}`}
+              <bdi dir="ltr" className="font-semibold expense-stat-amount">
+                {netStr}
               </bdi>
             </div>
             <div className="expense-hero-stat">
               <span className="summary-label">{t('todaySpent')}</span>
-              <bdi dir="ltr" className="font-semibold">
-                {moneyText(summary.todaySpentPaisa)}
+              <bdi dir="ltr" className="font-semibold expense-stat-amount">
+                {todayStr}
               </bdi>
             </div>
           </div>
@@ -218,26 +223,31 @@ export function ExpensesHome() {
               </div>
             </div>
 
-            {/* Type Filter Tabs */}
-            <div className="filter-tabs" role="tablist" aria-label={t('expensesTitle')}>
-              {(
-                [
-                  { id: 'all', label: t('filterAll') },
-                  { id: 'expense', label: t('expenseKind') },
-                  { id: 'income', label: t('incomeKind') },
-                ] as const
-              ).map(tab => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={kindFilter === tab.id}
-                  className={`filter-tab ${kindFilter === tab.id ? 'active' : ''}`}
-                  onClick={() => setKindFilter(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Type Filter Tabs (same style as Khata Home filter tabs) */}
+            <div className="filter-chips-container">
+              <div className="filter-tabs-row" role="tablist" aria-label={t('expensesTitle')}>
+                {(
+                  [
+                    { id: 'all', label: t('filterAll') },
+                    { id: 'expense', label: t('expenseKind') },
+                    { id: 'income', label: t('incomeKind') },
+                  ] as const
+                ).map(tab => {
+                  const isActive = kindFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={`filter-tab-btn ${isActive ? 'filter-tab-active' : ''}`}
+                      onClick={() => setKindFilter(tab.id)}
+                    >
+                      <span className="filter-tab-label">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Category Filter Chips */}

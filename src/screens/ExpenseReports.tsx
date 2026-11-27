@@ -88,13 +88,13 @@ export function ExpenseReports() {
               <strong className="combined-card-title">{t('khataSection')}</strong>
               <div className="combined-stat">
                 <span className="text-xs text-muted">{t('totalGiven')}</span>
-                <bdi dir="ltr" className="font-semibold amount-pay">
+                <bdi dir="ltr" className="font-semibold amount-receive">
                   {moneyText(khataMonth.givenPaisa)}
                 </bdi>
               </div>
               <div className="combined-stat">
                 <span className="text-xs text-muted">{t('totalReceived')}</span>
-                <bdi dir="ltr" className="font-semibold amount-receive">
+                <bdi dir="ltr" className="font-semibold amount-pay">
                   {moneyText(khataMonth.receivedPaisa)}
                 </bdi>
               </div>
@@ -130,11 +130,13 @@ export function ExpenseReports() {
                   const cat = catMap.get(item.categoryId);
                   const label = getCategoryLabel(cat, language, item.categoryId);
                   const deltaLabel =
-                    item.deltaPct !== null
-                      ? t('vsLastMonth', {
-                          delta: `${item.deltaPct >= 0 ? '+' : ''}${item.deltaPct}%`,
-                        })
-                      : null;
+                    item.deltaPct === null
+                      ? t('vsLastMonthNew')
+                      : item.deltaPct > 999
+                        ? t('vsLastMonth', { delta: '+999%+' })
+                        : t('vsLastMonth', {
+                            delta: `${item.deltaPct >= 0 ? '+' : ''}${item.deltaPct}%`,
+                          });
                   return (
                     <div key={item.categoryId} className="category-bar-row">
                       <div className="category-bar-labels">

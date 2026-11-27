@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, type FormEvent, type KeyboardEvent } from 'react';
 import { useNavigate, useParams, Link } from 'react-router';
-import { Check, BookUser, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, BookUser, ChevronDown, ChevronUp, User } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Modal } from '../components/Modal';
 import { CustomerContext } from '../components/CustomerContext';
@@ -350,10 +350,10 @@ export function CustomerForm() {
         {/* Live Avatar Preview */}
         <div className="avatar-preview-wrap">
           <div className="avatar-preview-circle" aria-hidden="true">
-            {previewInitials}
+            {name.trim() ? previewInitials : <User size={24} />}
           </div>
           <div className="avatar-preview-meta">
-            <div className="avatar-preview-name">{name.trim() || t('addCustomer')}</div>
+            {name.trim() && <div className="avatar-preview-name">{name.trim()}</div>}
             <div className="avatar-preview-sub">
               <bdi dir="ltr">{phone.trim() || '03XX-XXXXXXX'}</bdi>
               {category ? ` • ${allCategories.find(c => c.value === category)?.label ?? category}` : ''}
@@ -761,7 +761,7 @@ export function CustomerForm() {
           className="customer-form-sticky-bar"
           style={{ bottom: viewportBottom ? `${viewportBottom}px` : undefined }}
         >
-          <div className="form-actions sticky-actions" style={{ flexWrap: 'wrap' }}>
+          <div className="form-actions sticky-actions">
             <button className="button button-primary" type="submit" disabled={busy}>
               <Check size={18} aria-hidden="true" />
               <span>{t('save')}</span>
@@ -776,9 +776,6 @@ export function CustomerForm() {
                 <span>{t('saveAndAddUdhaar')}</span>
               </button>
             )}
-            <Link className="button button-secondary" to={backTo}>
-              {t('cancel')}
-            </Link>
           </div>
         </div>
       </form>
