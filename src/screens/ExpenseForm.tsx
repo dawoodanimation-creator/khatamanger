@@ -35,8 +35,8 @@ export function ExpenseForm() {
   const existing = expenseId ? (ledger.expenses ?? []).find(e => e.id === expenseId) : undefined;
 
   const categories = useMemo(
-    () => resolveExpenseCategories(ledger.expenseCategories),
-    [ledger.expenseCategories]
+    () => resolveExpenseCategories(ledger.expenseCategories, ledger.expenses),
+    [ledger.expenseCategories, ledger.expenses]
   );
 
   const initialKind: ExpenseKind = existing?.kind ?? 'expense';
@@ -47,15 +47,20 @@ export function ExpenseForm() {
       : searchParams.get('amount') ?? ''
   );
 
-  const visibleCats = useMemo(
-    () => getVisibleCategories(categories, kind),
-    [categories, kind]
-  );
+  const visibleCats = useMemo(() => {
+    const base = getVisibleCategories(categories, kind);
+    const counts = new Map<string, number>();
+    for (const exp of ledger.expenses ?? []) {
+      if (exp.kind === kind) counts.set(exp.categoryId, (counts.get(exp.categoryId) ?? 0) + 1);
+    }
+    return [...base].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || a.order - b.order);
+  }, [categories, kind, ledger.expenses]);
+  const [catQuery, setCatQuery] = useState('');
 
   const [categoryId, setCategoryId] = useState(
     existing?.categoryId ??
       searchParams.get('categoryId') ??
-      (initialKind === 'expense' ? 'rashan' : 'sale')
+      (initialKind === 'expense' ? 'food_dining' : 'salary')
   );
   const [date, setDate] = useState(existing ? existing.date.slice(0, 10) : todayISO());
   const [showCustomDate, setShowCustomDate] = useState(false);
@@ -410,24 +415,81 @@ export function ExpenseForm() {
         </div>
       </form>
 
-      {/* More Categories Sheet */}
+      {/* More Categories Sheet (with search + groups) */}
       {showMoreCats && (
         <BottomSheet title={t('category')} onDismiss={() => setShowMoreCats(false)}>
-          <div className="expense-cat-grid" style={{ paddingBottom: '12px' }}>
-            {visibleCats.map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                className={`expense-cat-chip ${categoryId === cat.id ? 'is-active' : ''}`}
-                onClick={() => {
-                  setCategoryId(cat.id);
-                  setShowMoreCats(false);
-                }}
-              >
-                <ExpenseCategoryIcon name={cat.icon} size={16} color={cat.color} />
-                <span className="truncate">{getCategoryLabel(cat, language)}</span>
-              </button>
-            ))}
+          <div style={{ paddingBottom: '12px' }}>
+            <input
+              type="search"
+              className="form-control-input"
+              style={{ marginBottom: '10px' }}
+              value={catQuery}
+              onChange={e => setCatQuery(e.target.value)}
+              placeholder={t('searchCategories')}
+              aria-label={t('searchCategories')}
+            />
+            {(() => {
+              const q = catQuery.trim().toLowerCase();
+              const filteredCats = q
+                ? visibleCats.filter(
+                    c =>
+                      c.nameEn.toLowerCase().includes(q) ||
+                      c.nameUr.toLowerCase().includes(q)
+                  )
+                : visibleCats;
+              const groupOrder: Array<{ key: string; labelKey: TranslationKey }> = [
+                { key: 'daily', labelKey: 'groupDaily' },
+                { key: 'bills_home', labelKey: 'groupBillsHome' },
+                { key: 'family', labelKey: 'groupFamily' },
+                { key: 'money', labelKey: 'groupMoney' },
+                { key: 'fun_other', labelKey: 'groupFunOther' },
+              ];
+              if (kind === 'income' || q) {
+                return (
+                  <div className="expense-cat-grid">
+                    {filteredCats.map(cat => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        className={`expense-cat-chip ${categoryId === cat.id ? 'is-active' : ''}`}
+                        onClick={() => {
+                          setCategoryId(cat.id);
+                          setShowMoreCats(false);
+                        }}
+                      >
+                        <ExpenseCategoryIcon name={cat.icon} size={16} color={cat.color} />
+                        <span className="truncate">{getCategoryLabel(cat, language)}</span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              }
+              return groupOrder.map(g => {
+                const items = filteredCats.filter(c => (c.group ?? 'fun_other') === g.key);
+                if (items.length === 0) return null;
+                return (
+                  <div key={g.key}>
+                    <div className="cat-group-heading">{t(g.labelKey)}</div>
+                    <div className="expense-cat-grid">
+                      {items.map(cat => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className={`expense-cat-chip ${categoryId === cat.id ? 'is-active' : ''}`}
+                          onClick={() => {
+                            setCategoryId(cat.id);
+                            setShowMoreCats(false);
+                          }}
+                        >
+                          <ExpenseCategoryIcon name={cat.icon} size={16} color={cat.color} />
+                          <span className="truncate">{getCategoryLabel(cat, language)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </BottomSheet>
       )}

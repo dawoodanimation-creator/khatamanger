@@ -335,5 +335,18 @@
   "showCategory": "Show",
   "moveUp": "Move up",
   "moveDown": "Move down",
-  "monthlyBudget": "Monthly budget"
+  "monthlyBudget": "Monthly budget",
+  "onboardingShopTypeStep": "What kind of khata is this?",
+  "shopTypesLabel": "Shop type",
+  "customShopType": "+ Custom shop type",
+  "appModeLabel": "App sections",
+  "groupDaily": "Daily",
+  "groupBillsHome": "Bills & Home",
+  "groupFamily": "Family",
+  "groupMoney": "Money",
+  "groupFunOther": "Fun & Other",
+  "recentCategories": "Recent",
+  "searchCategories": "Search categories",
+  "last7Days": "Last 7 days",
+  "udhaarCategoryFilter": "Udhaar category"
 }

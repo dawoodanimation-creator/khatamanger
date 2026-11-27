@@ -27,7 +27,7 @@ function formatMonthTitle(monthKey: string, language: 'en' | 'ur'): string {
 }
 
 export function ExpensesHome() {
-  const { ledger } = useLedger();
+  const { ledger, deleteExpense, saveExpense } = useLedger();
   const { prefs } = useUiPrefs();
   const { t, language, direction } = useI18n();
 
@@ -37,12 +37,14 @@ export function ExpensesHome() {
   const [catFilter, setCatFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
   const [dismissedSuggestionIds, setDismissedSuggestionIds] = useState<string[]>([]);
+  const [deletedUndo, setDeletedUndo] = useState<import('../models/expense').Expense | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const hidden = !!ledger.settings.hideBalances;
   const expenses = ledger.expenses ?? [];
   const categories = useMemo(
-    () => resolveExpenseCategories(ledger.expenseCategories),
-    [ledger.expenseCategories]
+    () => resolveExpenseCategories(ledger.expenseCategories, expenses),
+    [ledger.expenseCategories, expenses]
   );
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
 
@@ -98,6 +100,30 @@ export function ExpensesHome() {
   const todayStr = moneyText(summary.todaySpentPaisa);
   const stackSubgrid =
     !hidden && (incomeStr.length >= 11 || netStr.length >= 11 || todayStr.length >= 11);
+
+  const last7Days = useMemo(() => {
+    const days: Array<{ day: string; total: number; isToday: boolean }> = [];
+    const byDay = new Map<string, number>();
+    for (const e of expenses) {
+      if (e.kind !== 'expense') continue;
+      const d = e.date.slice(0, 10);
+      byDay.set(d, (byDay.get(d) ?? 0) + e.amountPaisa);
+    }
+    for (let offset = 6; offset >= 0; offset--) {
+      const d = new Date();
+      d.setDate(d.getDate() - offset);
+      const iso = todayISO(d);
+      days.push({ day: iso, total: byDay.get(iso) ?? 0, isToday: offset === 0 });
+    }
+    return days;
+  }, [expenses]);
+  const max7d = Math.max(...last7Days.map(d => d.total), 1);
+
+  async function handleSwipeDelete(exp: import('../models/expense').Expense) {
+    if (await deleteExpense(exp.id)) {
+      setDeletedUndo(exp);
+    }
+  }
 
   return (
     <>
@@ -166,6 +192,31 @@ export function ExpensesHome() {
             </div>
           </div>
         </section>
+
+        {/* Today Rounded Card + 7-Day Mini Bar Chart */}
+        <div className="today-mini-chart-card">
+          <div>
+            <span className="summary-label">{t('todaySpent')}</span>
+            <div>
+              <bdi dir="ltr" className="font-bold" style={{ fontSize: '18px' }}>
+                {todayStr}
+              </bdi>
+            </div>
+            <span className="text-xs text-muted">{t('last7Days')}</span>
+          </div>
+          <div className="mini-bars-7d" aria-hidden="true">
+            {last7Days.map(d => {
+              const h = d.total > 0 ? Math.max(6, Math.round((d.total / max7d) * 34)) : 4;
+              return (
+                <div
+                  key={d.day}
+                  className={`mini-bar-col ${d.isToday ? 'is-today' : ''}`}
+                  style={{ height: `${h}px` }}
+                />
+              );
+            })}
+          </div>
+        </div>
 
         {/* P2 Recurring Monthly Bill Suggestion */}
         {recurringSuggestions.slice(0, 1).map(s => {
@@ -281,6 +332,10 @@ export function ExpensesHome() {
         {/* Day-grouped list or empty state */}
         {monthExpenses.length === 0 ? (
           <div className="empty-state-minimal text-center">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" style={{ margin: '0 auto 12px', color: 'var(--color-primary)' }}>
+              <rect x="14" y="14" width="44" height="44" rx="10" stroke="currentColor" strokeWidth="2.5" opacity="0.3" />
+              <path d="M24 38l8-8 6 6 10-12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
             <h2 className="empty-state-headline">{t('emptyExpensesTitle')}</h2>
             <p className="empty-state-subtext">{t('emptyExpensesBody')}</p>
             <Link className="button button-primary empty-state-cta" to="/expenses/new">
@@ -325,6 +380,17 @@ export function ExpensesHome() {
                         to={`/expenses/${exp.id}/edit`}
                         className={`expense-row-link ${idx < 8 ? 'stagger-row' : ''}`}
                         style={idx < 8 ? ({ '--stagger-idx': idx } as React.CSSProperties) : undefined}
+                        onTouchStart={e => setTouchStartX(e.touches[0]?.clientX ?? null)}
+                        onTouchEnd={e => {
+                          if (touchStartX === null) return;
+                          const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+                          const delta = touchStartX - endX;
+                          setTouchStartX(null);
+                          if ((direction === 'ltr' && delta > 72) || (direction === 'rtl' && delta < -72)) {
+                            e.preventDefault();
+                            void handleSwipeDelete(exp);
+                          }
+                        }}
                       >
                         <span
                           className="cat-icon-badge"
@@ -337,6 +403,11 @@ export function ExpensesHome() {
                         </span>
                         <div className="expense-row-meta">
                           <strong className="expense-row-cat" dir="auto">
+                            <span
+                              className="inline-block w-2 h-2 rounded-full mr-1.5"
+                              style={{ backgroundColor: cat?.color ?? '#475569' }}
+                              aria-hidden="true"
+                            />
                             {label}
                           </strong>
                           {(exp.note || exp.paymentMethod) && (
@@ -369,6 +440,32 @@ export function ExpensesHome() {
           <span>{t('addExpense')}</span>
         </Link>
       </div>
+
+      {deletedUndo && (
+        <div className="undo-snackbar" role="status">
+          <span>{t('entryDeleted')}</span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className="undo-snackbar-btn"
+              onClick={() => {
+                void saveExpense(deletedUndo).then(ok => {
+                  if (ok) setDeletedUndo(null);
+                });
+              }}
+            >
+              {t('undo')}
+            </button>
+            <button
+              type="button"
+              className="undo-snackbar-btn"
+              onClick={() => setDeletedUndo(null)}
+            >
+              {t('dismiss')}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

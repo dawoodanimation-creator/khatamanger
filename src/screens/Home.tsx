@@ -23,6 +23,7 @@ export function Home() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [udhaarCatFilter, setUdhaarCatFilter] = useState<string>('all');
 
   const index = ledgerIndex(ledger);
   const hidden = !!ledger.settings.hideBalances;
@@ -78,6 +79,14 @@ export function Home() {
     Supplier: t('catSupplier'),
   };
 
+  const availableUdhaarCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const tx of ledger.transactions) {
+      if (tx.kind === 'credit' && tx.category?.trim()) set.add(tx.category.trim());
+    }
+    return Array.from(set);
+  }, [ledger.transactions]);
+
   const matchingCustomers = useMemo(() => {
     const search = query.trim().toLowerCase();
     return sorted.filter(c => {
@@ -92,6 +101,13 @@ export function Home() {
         return false;
       }
 
+      if (udhaarCatFilter !== 'all') {
+        const hist = index.histories.get(c.id) ?? [];
+        if (!hist.some(h => h.transaction.kind === 'credit' && h.transaction.category === udhaarCatFilter)) {
+          return false;
+        }
+      }
+
       const bal = index.balances.get(c.id) ?? 0;
       if (filter === 'receive') return bal > 0;
       if (filter === 'pay') return bal < 0;
@@ -99,7 +115,7 @@ export function Home() {
       if (filter === 'overdue') return overdueByCustomer.has(c.id);
       return true;
     });
-  }, [sorted, query, filter, categoryFilter, index.balances, overdueByCustomer]);
+  }, [sorted, query, filter, categoryFilter, udhaarCatFilter, index.balances, index.histories, overdueByCustomer]);
 
   const pinnedSet = useMemo(() => new Set(prefs.pinnedCustomerIds), [prefs.pinnedCustomerIds]);
   const showBackupBanner = shouldShowBackupBanner(
@@ -117,10 +133,14 @@ export function Home() {
     setQuery('');
     setFilter('all');
     setCategoryFilter('all');
+    setUdhaarCatFilter('all');
   }
 
   const hasFilterOrSearch =
-    query.trim().length > 0 || filter !== 'all' || categoryFilter !== 'all';
+    query.trim().length > 0 ||
+    filter !== 'all' ||
+    categoryFilter !== 'all' ||
+    udhaarCatFilter !== 'all';
 
   return (
     <>
@@ -228,9 +248,43 @@ export function Home() {
           </div>
         )}
 
+        {/* Optional Udhaar Category Filter Chips */}
+        {availableUdhaarCategories.length > 0 && (
+          <div
+            className="home-category-filter-row"
+            role="group"
+            aria-label={t('udhaarCategoryFilter')}
+          >
+            <button
+              type="button"
+              className={`choice-chip ${udhaarCatFilter === 'all' ? 'is-active' : ''}`}
+              aria-pressed={udhaarCatFilter === 'all'}
+              onClick={() => setUdhaarCatFilter('all')}
+            >
+              {t('udhaarCategoryFilter')}: {t('filterAll')}
+            </button>
+            {availableUdhaarCategories.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                className={`choice-chip ${udhaarCatFilter === cat ? 'is-active' : ''}`}
+                aria-pressed={udhaarCatFilter === cat}
+                onClick={() => setUdhaarCatFilter(udhaarCatFilter === cat ? 'all' : cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Empty States */}
         {ledger.customers.length === 0 ? (
           <div className="empty-state-minimal text-center">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" style={{ margin: '0 auto 12px', color: 'var(--color-primary)' }}>
+              <rect x="14" y="10" width="44" height="52" rx="8" stroke="currentColor" strokeWidth="2.5" opacity="0.3" />
+              <circle cx="36" cy="30" r="9" stroke="currentColor" strokeWidth="2.5" />
+              <path d="M22 50c3-6 25-6 28 0" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
             <h2 className="empty-state-headline">{t('emptyCustomers')}</h2>
             <p className="empty-state-subtext">{t('emptyCustomersBody')}</p>
             <Link

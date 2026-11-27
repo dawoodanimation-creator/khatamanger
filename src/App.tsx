@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Routes, Route, useLocation, Link } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Routes, Route, useLocation, Link, Navigate } from 'react-router';
 import { BookOpen, ShieldCheck, Lock } from 'lucide-react';
 import { useI18n } from './i18n';
 import { useLedger } from './state/LedgerContext';
@@ -27,6 +27,10 @@ export default function App() {
   const [pinError, setPinError] = useState('');
   const [swUpdateReady, setSwUpdateReady] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const sectionScroll = useRef<Record<string, number>>({});
+  const useMode = ledger.settings.useMode ?? 'both';
+  const isExpensesSection = location.pathname.startsWith('/expenses');
+  const sectionKey = isExpensesSection ? 'expenses' : 'khata';
 
   useEffect(() => {
     const onSwUpdate = () => setSwUpdateReady(true);
@@ -57,8 +61,18 @@ export default function App() {
   }, [language, direction, ledger.settings.darkMode, t]);
   useEffect(() => {
     const main = document.getElementById('preview-app');
-    if (main) main.scrollTop = 0;
-    document.scrollingElement?.scrollTo?.({ top: 0, behavior: 'instant' });
+    if (main) {
+      main.scrollTop = sectionScroll.current[sectionKey] ?? 0;
+      const onScroll = () => {
+        sectionScroll.current[sectionKey] = main.scrollTop;
+      };
+      main.addEventListener('scroll', onScroll, { passive: true });
+      return () => main.removeEventListener('scroll', onScroll);
+    }
+    return undefined;
+  }, [location.pathname, sectionKey]);
+  useEffect(() => {
+    const main = document.getElementById('preview-app');
     const primaryField = main?.querySelector<HTMLInputElement>('[data-entry-focus]');
     if (primaryField) { primaryField.focus({ preventScroll: true }); return; }
     const heading = main?.querySelector<HTMLElement>('h1');
@@ -70,7 +84,7 @@ export default function App() {
       <h2>{t('previewTitle')}</h2><p>{t('previewDescription')}</p>
     </aside>
     <div className="phone-frame"><div className="phone-screen"><div className="phone-sensor" aria-hidden="true" />
-      <main className="phone-app" key={location.pathname} id="preview-app" aria-label={t('app')}>
+      <main className="phone-app" data-section={sectionKey} key={location.pathname} id="preview-app" aria-label={t('app')}>
         {isLocked ? (
           <div className="page-content empty-state flex flex-col items-center text-center" style={{ margin: 'auto 0' }}>
             <span className="foundation-icon" style={{ marginBottom: '16px' }}><Lock aria-hidden="true"/></span>
@@ -115,8 +129,9 @@ export default function App() {
           </div>
         ) : loadError && location.pathname !== '/settings/backup' ? <div className="page-content empty-state"><BookOpen/><h1>{t('loadError')}</h1><p>{t('previewStorageError')}</p><Link className="button button-primary" to="/settings/backup">{t('import')}</Link></div>
           : <><Routes>
-            <Route path="/" element={<Home/>}/><Route path="/settings" element={<Settings/>}/>
-            <Route path="/summary" element={<MonthlySummary/>}/>
+            <Route path="/" element={useMode === 'expenses' && ledger.settings.onboarded ? <Navigate to="/expenses" replace/> : <Home/>}/>
+            <Route path="/settings" element={<Settings/>}/>
+            <Route path="/summary" element={useMode === 'expenses' ? <Navigate to="/expenses/reports" replace/> : <MonthlySummary/>}/>
             <Route path="/customers/new" element={<CustomerForm/>}/>
             <Route path="/customer/:customerId" element={<CustomerDetail/>}/>
             <Route path="/customer/:customerId/edit" element={<CustomerForm/>}/>
@@ -128,10 +143,10 @@ export default function App() {
             <Route path="/customers/:customerId/payment" element={<TransactionForm kind="payment"/>}/>
             <Route path="/settings/backup" element={<Backup/>}/>
             <Route path="/settings/categories" element={<ExpenseCategoriesSettings/>}/>
-            <Route path="/expenses" element={<ExpensesHome/>}/>
-            <Route path="/expenses/new" element={<ExpenseForm/>}/>
-            <Route path="/expenses/:expenseId/edit" element={<ExpenseForm/>}/>
-            <Route path="/expenses/reports" element={<ExpenseReports/>}/>
+            <Route path="/expenses" element={useMode === 'khata' ? <Navigate to="/" replace/> : <ExpensesHome/>}/>
+            <Route path="/expenses/new" element={useMode === 'khata' ? <Navigate to="/" replace/> : <ExpenseForm/>}/>
+            <Route path="/expenses/:expenseId/edit" element={useMode === 'khata' ? <Navigate to="/" replace/> : <ExpenseForm/>}/>
+            <Route path="/expenses/reports" element={useMode === 'khata' ? <Navigate to="/" replace/> : <ExpenseReports/>}/>
             <Route path="*" element={<div className="page-content empty-state"><h1>{t('notFound')}</h1><Link to="/" className="button button-primary">{t('home')}</Link></div>}/>
           </Routes>
           {['/', '/expenses', '/settings', '/summary', '/expenses/reports'].includes(location.pathname) && <BottomNav/>}

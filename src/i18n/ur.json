@@ -335,5 +335,18 @@
   "showCategory": "دکھائیں",
   "moveUp": "اوپر لے جائیں",
   "moveDown": "نیچے لے جائیں",
-  "monthlyBudget": "ماہانہ بجٹ"
+  "monthlyBudget": "ماہانہ بجٹ",
+  "onboardingShopTypeStep": "یہ کس قسم کا کھاتہ ہے؟",
+  "shopTypesLabel": "دکان کی قسم",
+  "customShopType": "+ نئی قسم",
+  "appModeLabel": "ایپ کے حصے",
+  "groupDaily": "روزمرہ",
+  "groupBillsHome": "بل اور گھر",
+  "groupFamily": "خاندان",
+  "groupMoney": "پیسہ اور بچت",
+  "groupFunOther": "تفریح اور دیگر",
+  "recentCategories": "حالیہ",
+  "searchCategories": "زمرہ تلاش کریں",
+  "last7Days": "آخری 7 دن",
+  "udhaarCategoryFilter": "ادھار کا زمرہ"
 }

@@ -28,8 +28,8 @@ export function ExpenseReports() {
   const hidden = !!ledger.settings.hideBalances;
   const expenses = ledger.expenses ?? [];
   const categories = useMemo(
-    () => resolveExpenseCategories(ledger.expenseCategories),
-    [ledger.expenseCategories]
+    () => resolveExpenseCategories(ledger.expenseCategories, expenses),
+    [ledger.expenseCategories, expenses]
   );
   const catMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
 

@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { ExpenseCategoryIcon } from '../components/ExpenseCategoryIcon';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
+import { useUiPrefs } from '../state/UiPrefsContext';
 import type { ExpenseCategory, ExpenseCategoryIcon as IconName, ExpenseKind } from '../models/expense';
 import {
   CATEGORY_COLOR_CHOICES,
@@ -15,12 +16,27 @@ import { newId } from '../utils/ids';
 import { parseAmount } from '../utils/money';
 
 export function ExpenseCategoriesSettings() {
-  const { ledger, saveExpenseCategories, saveBudgets } = useLedger();
+  const { ledger, saveExpenseCategories, saveCustomerCategories, saveBudgets } = useLedger();
+  const { prefs, addCustomCustomerCategory } = useUiPrefs();
   const { t, language } = useI18n();
 
-  const categories = resolveExpenseCategories(ledger.expenseCategories);
+  const useMode = ledger.settings.useMode ?? 'both';
+  const [sectionTab, setSectionTab] = useState<'expenses' | 'khata'>(
+    useMode === 'khata' ? 'khata' : 'expenses'
+  );
+
+  const categories = resolveExpenseCategories(ledger.expenseCategories, ledger.expenses);
   const budgets = ledger.budgets ?? [];
   const budgetMap = new Map(budgets.map(b => [b.categoryId, b.limitPaisa]));
+
+  const [newCustomerCat, setNewCustomerCat] = useState('');
+  const customerCats = ledger.customerCategories ?? [];
+  const allCustomCustomerNames = Array.from(
+    new Set([
+      ...(prefs.customCustomerCategories ?? []),
+      ...customerCats.map(c => c.nameEn),
+    ])
+  );
 
   const [showAdd, setShowAdd] = useState(false);
   const [newNameEn, setNewNameEn] = useState('');
@@ -116,6 +132,81 @@ export function ExpenseCategoriesSettings() {
       />
 
       <div className="page-content settings-content">
+        {useMode === 'both' && (
+          <div className="segmented-control" style={{ marginBottom: '12px' }}>
+            <button
+              type="button"
+              className={`segmented-btn ${sectionTab === 'expenses' ? 'is-active' : ''}`}
+              onClick={() => setSectionTab('expenses')}
+            >
+              {t('expensesSection')}
+            </button>
+            <button
+              type="button"
+              className={`segmented-btn ${sectionTab === 'khata' ? 'is-active' : ''}`}
+              onClick={() => setSectionTab('khata')}
+            >
+              {t('khataSection')}
+            </button>
+          </div>
+        )}
+
+        {sectionTab === 'khata' ? (
+          <section className="settings-group">
+            <h2 className="settings-group-title">{t('khataSection')}</h2>
+            <div className="settings-group-card settings-group-card-padded" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="custom-chip-inline" style={{ marginTop: 0 }}>
+                <input
+                  className="form-control-input"
+                  value={newCustomerCat}
+                  onChange={e => setNewCustomerCat(e.target.value)}
+                  maxLength={60}
+                  placeholder={t('customCategoryPlaceholder')}
+                />
+                <button
+                  type="button"
+                  className="button button-primary"
+                  onClick={() => {
+                    const clean = newCustomerCat.trim();
+                    if (!clean) return;
+                    addCustomCustomerCategory(clean);
+                    void saveCustomerCategories([
+                      ...customerCats.filter(c => c.nameEn !== clean),
+                      { id: `cc_${clean.toLowerCase().replace(/\W+/g, '_')}`, nameEn: clean, nameUr: clean },
+                    ]);
+                    setNewCustomerCat('');
+                  }}
+                >
+                  {t('save')}
+                </button>
+              </div>
+              {allCustomCustomerNames.map(name => {
+                const cfg = customerCats.find(c => c.nameEn === name);
+                const hidden = cfg?.hidden ?? false;
+                return (
+                  <div key={name} className="setting-row">
+                    <span className={hidden ? 'text-muted' : ''}>{name}</span>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label={hidden ? t('showCategory') : t('hideCategory')}
+                      onClick={() => {
+                        const next = [
+                          ...customerCats.filter(c => c.nameEn !== name),
+                          { id: cfg?.id ?? `cc_${name}`, nameEn: name, nameUr: cfg?.nameUr ?? name, hidden: !hidden },
+                        ];
+                        void saveCustomerCategories(next);
+                      }}
+                    >
+                      {hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : (
+          <>
         {showAdd && (
           <section className="settings-group">
             <h2 className="settings-group-title">{t('addCustomCategory')}</h2>
@@ -281,6 +372,8 @@ export function ExpenseCategoriesSettings() {
             ))}
           </div>
         </section>
+          </>
+        )}
       </div>
     </>
   );

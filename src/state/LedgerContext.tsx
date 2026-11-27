@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { emptyLedger, type AppSettings, type Ledger } from '../models/ledger';
+import { emptyLedger, type AppSettings, type CustomerCategoryConfig, type Ledger } from '../models/ledger';
 import type { Customer } from '../models/customer';
 import type { LedgerTransaction } from '../models/transaction';
 import type { CategoryBudget, Expense, ExpenseCategory } from '../models/expense';
@@ -18,6 +18,7 @@ interface LedgerState {
   saveExpense: (expense: Expense) => Promise<boolean>;
   deleteExpense: (id: string) => Promise<boolean>;
   saveExpenseCategories: (categories: ExpenseCategory[]) => Promise<boolean>;
+  saveCustomerCategories: (categories: CustomerCategoryConfig[]) => Promise<boolean>;
   saveBudgets: (budgets: CategoryBudget[]) => Promise<boolean>;
   restore: (ledger: Ledger, expected: string | null) => Promise<boolean>;
   replaceRecords: (ledger: Pick<Ledger, 'customers' | 'transactions'>, expected: string | null) => Promise<boolean>;
@@ -95,6 +96,7 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     saveExpense: expense => commit(data => mutations.saveExpense(data, expense)),
     deleteExpense: id => commit(data => mutations.deleteExpense(data, id)),
     saveExpenseCategories: categories => commit(data => mutations.saveExpenseCategories(data, categories)),
+    saveCustomerCategories: categories => commit(data => mutations.saveCustomerCategories(data, categories)),
     saveBudgets: budgets => commit(data => mutations.saveBudgets(data, budgets)),
     restore: (data, expected) => commit(() => data, { data, expected }),
     replaceRecords: (records, expected) => {

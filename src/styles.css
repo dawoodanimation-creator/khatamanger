@@ -1378,6 +1378,63 @@ button:active:not(:disabled),
   color: #052e26;
 }
 
+[data-section='expenses'] {
+  --color-primary: #0f4c81;
+  --color-primary-strong: #0c3d68;
+  --color-primary-soft: rgba(15, 76, 129, 0.11);
+}
+
+[data-theme='dark'] [data-section='expenses'] {
+  --color-primary: #38bdf8;
+  --color-primary-strong: #7dd3fc;
+  --color-primary-soft: rgba(56, 189, 248, 0.16);
+}
+
+[data-theme='dark'] [data-section='expenses'] .segmented-btn.is-active,
+[data-theme='dark'] [data-section='expenses'] .button-primary {
+  color: #082f49;
+}
+
+.today-mini-chart-card {
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mini-bars-7d {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 36px;
+}
+
+.mini-bar-col {
+  width: 8px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  min-height: 4px;
+  transition: height 180ms ease;
+}
+
+.mini-bar-col.is-today {
+  background: var(--color-primary);
+}
+
+.cat-group-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 12px 0 6px;
+}
+
 .customer-form-page {
   padding-bottom: 96px;
 }

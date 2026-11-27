@@ -12,7 +12,9 @@ import { Balance } from '../components/Balance';
 import { balanceFor, exactAdd } from '../utils/balance';
 import { formatMoney } from '../utils/numberFormat';
 import { Header } from '../components/Header';
+import { BottomSheet } from '../components/BottomSheet';
 import { MissingCustomer } from '../components/MissingCustomer';
+import { categoriesForShopTypes, quickItemsForShopTypes } from '../utils/shopPresets';
 import type { TransactionItem, TransactionKind } from '../models/transaction';
 import { useI18n, type TranslationKey } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
@@ -22,19 +24,6 @@ import { customerPath } from '../utils/routes';
 import { parseAmount } from '../utils/money';
 import { todayISO, validEntryDate } from '../utils/dates';
 import { getInitials } from '../utils/avatar';
-
-const BUILTIN_UDHAAR_CATEGORIES: Array<{ value: string; labelKey: TranslationKey }> = [
-  { value: 'Rashan/Grocery', labelKey: 'udhaarGrocery' },
-  { value: 'Dairy', labelKey: 'udhaarDairy' },
-  { value: 'Vegetables & Fruit', labelKey: 'udhaarVegFruit' },
-  { value: 'Medicine', labelKey: 'udhaarMedicine' },
-  { value: 'Mobile load', labelKey: 'udhaarMobileLoad' },
-  { value: 'Clothes', labelKey: 'udhaarClothes' },
-  { value: 'Hardware', labelKey: 'udhaarHardware' },
-  { value: 'Services', labelKey: 'udhaarServices' },
-  { value: 'Cash udhaar', labelKey: 'udhaarCash' },
-  { value: 'Other', labelKey: 'udhaarOther' },
-];
 
 const PAYMENT_METHODS: Array<{ value: string; labelKey: TranslationKey }> = [
   { value: 'Cash', labelKey: 'methodCash' },
@@ -69,6 +58,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
 
   const [category, setCategory] = useState('');
   const [showCustomCat, setShowCustomCat] = useState(false);
+  const [showMoreUdhaarCats, setShowMoreUdhaarCats] = useState(false);
   const [customCatInput, setCustomCatInput] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -134,19 +124,35 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const yesterdayStr = todayISO(yesterdayDate);
 
-  const commonItems =
-    language === 'ur'
-      ? ['آٹا', 'چینی', 'گھی / تیل', 'چائے', 'دودھ', 'چاول', 'دال', 'صابن']
-      : [
-          'Flour (Aata)',
-          'Sugar (Chini)',
-          'Cooking Oil',
-          'Tea',
-          'Milk',
-          'Rice',
-          'Lentils',
-          'Soap',
-        ];
+  const commonItems = useMemo(
+    () => quickItemsForShopTypes(ledger.settings.shopTypes, language),
+    [ledger.settings.shopTypes, language]
+  );
+
+  const udhaarCategories = useMemo(() => {
+    const presetCats = categoriesForShopTypes(
+      ledger.settings.shopTypes,
+      ledger.settings.customShopTypes
+    ).map(c => ({ value: c.nameEn, label: language === 'ur' ? c.nameUr : c.nameEn }));
+
+    const customList = (prefs.customUdhaarCategories ?? []).map(c => ({ value: c, label: c }));
+    const merged = [...presetCats];
+    const seen = new Set(merged.map(m => m.value.toLowerCase()));
+    for (const c of customList) {
+      if (!seen.has(c.value.toLowerCase())) {
+        seen.add(c.value.toLowerCase());
+        merged.push(c);
+      }
+    }
+    // Sort by usage frequency in existing transactions
+    const counts = new Map<string, number>();
+    for (const tx of ledger.transactions) {
+      if (tx.kind === 'credit' && tx.category) {
+        counts.set(tx.category, (counts.get(tx.category) ?? 0) + 1);
+      }
+    }
+    return merged.sort((a, b) => (counts.get(b.value) ?? 0) - (counts.get(a.value) ?? 0));
+  }, [ledger.settings.shopTypes, ledger.settings.customShopTypes, prefs.customUdhaarCategories, ledger.transactions, language]);
 
   const rememberedItems = useMemo(() => {
     const saved = [...(prefs.quickItems ?? [])].sort((a, b) => b.count - a.count);
@@ -409,17 +415,7 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           <div className="form-field">
             <label>{t('category')}</label>
             <div className="chip-wrap-row" role="group" aria-label={t('category')}>
-              {[
-                ...BUILTIN_UDHAAR_CATEGORIES.map(c => ({ value: c.value, label: t(c.labelKey) })),
-                ...(prefs.customUdhaarCategories ?? [])
-                  .filter(
-                    c =>
-                      !BUILTIN_UDHAAR_CATEGORIES.some(
-                        b => b.value.toLowerCase() === c.toLowerCase()
-                      )
-                  )
-                  .map(c => ({ value: c, label: c })),
-              ].map(cat => {
+              {udhaarCategories.slice(0, 6).map(cat => {
                 const active = category === cat.value;
                 return (
                   <button
@@ -434,6 +430,16 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
                   </button>
                 );
               })}
+              {udhaarCategories.length > 6 && (
+                <button
+                  type="button"
+                  className="choice-chip choice-chip-add"
+                  onClick={() => setShowMoreUdhaarCats(true)}
+                  disabled={busy}
+                >
+                  <span>{t('moreCategories')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 className="choice-chip choice-chip-add"
@@ -443,6 +449,28 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
                 <span>{t('customCategory')}</span>
               </button>
             </div>
+            {showMoreUdhaarCats && (
+              <BottomSheet title={t('category')} onDismiss={() => setShowMoreUdhaarCats(false)}>
+                <div className="chip-wrap-row" style={{ paddingBottom: '12px' }}>
+                  {udhaarCategories.map(cat => {
+                    const active = category === cat.value;
+                    return (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        className={`choice-chip ${active ? 'is-active' : ''}`}
+                        onClick={() => {
+                          setCategory(active ? '' : cat.value);
+                          setShowMoreUdhaarCats(false);
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </BottomSheet>
+            )}
             {showCustomCat && (
               <div className="custom-chip-inline">
                 <input

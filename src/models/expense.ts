@@ -20,6 +20,14 @@ export type ExpenseCategoryIcon =
   | 'banknote'
   | 'circle-dot';
 
+export type ExpenseCategoryGroup =
+  | 'daily'
+  | 'bills_home'
+  | 'family'
+  | 'money'
+  | 'fun_other'
+  | 'income';
+
 export interface ExpenseCategory {
   id: string;
   nameEn: string;
@@ -27,6 +35,7 @@ export interface ExpenseCategory {
   kind: ExpenseKind;
   icon: ExpenseCategoryIcon;
   color: string;
+  group?: ExpenseCategoryGroup;
   hidden?: boolean;
   order: number;
   isDefault?: boolean;

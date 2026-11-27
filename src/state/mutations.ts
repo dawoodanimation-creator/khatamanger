@@ -1,7 +1,7 @@
 import type { Customer } from '../models/customer';
 import type { LedgerTransaction } from '../models/transaction';
 import type { CategoryBudget, Expense, ExpenseCategory } from '../models/expense';
-import { maxAmountPaisa, type Ledger } from '../models/ledger';
+import { maxAmountPaisa, type CustomerCategoryConfig, type Ledger } from '../models/ledger';
 import { ledgerIndex } from '../utils/balance';
 import { validateCustomer } from '../utils/validation';
 export function ensureExactBalances(ledger: Ledger): Ledger {
@@ -58,6 +58,9 @@ export function deleteExpense(ledger: Ledger, id: string): Ledger {
 }
 export function saveExpenseCategories(ledger: Ledger, categories: ExpenseCategory[]): Ledger {
   return { ...ledger, expenseCategories: categories };
+}
+export function saveCustomerCategories(ledger: Ledger, categories: CustomerCategoryConfig[]): Ledger {
+  return { ...ledger, customerCategories: categories };
 }
 export function saveBudgets(ledger: Ledger, budgets: CategoryBudget[]): Ledger {
   return { ...ledger, budgets };

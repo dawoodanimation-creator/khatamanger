@@ -13,6 +13,8 @@ import {
   UserCircle2
 } from 'lucide-react';
 import { formatPakistaniPhoneInput } from '../utils/phone';
+import { SHOP_TYPE_PRESETS } from '../utils/shopPresets';
+import type { UseMode } from '../models/ledger';
 import { Link } from 'react-router';
 import { Backup } from './Backup';
 import { ReviewControls } from '../components/ReviewControls';
@@ -28,8 +30,17 @@ declare const __COMMIT_HASH__: string;
 export function Settings() {
   const { ledger, updateSettings } = useLedger();
   const { prefs, setNumberFormat, setReminderTemplate } = useUiPrefs();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const settings = ledger.settings;
+  const useMode = settings.useMode ?? 'both';
+  const shopTypes = settings.shopTypes ?? [];
+
+  function toggleShopType(id: string) {
+    const next = shopTypes.includes(id)
+      ? shopTypes.filter(x => x !== id)
+      : [...shopTypes, id];
+    void updateSettings({ shopTypes: next });
+  }
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinValue, setPinValue] = useState('');
@@ -122,6 +133,51 @@ export function Settings() {
                 placeholder="03XX-XXXXXXX"
               />
             </div>
+
+            <div className="form-field">
+              <label>{t('appModeLabel')}</label>
+              <div className="chip-wrap-row" role="group" aria-label={t('appModeLabel')}>
+                {(
+                  [
+                    { id: 'khata', key: 'navKhata' },
+                    { id: 'expenses', key: 'navExpenses' },
+                    { id: 'both', key: 'useBoth' },
+                  ] as Array<{ id: UseMode; key: 'navKhata' | 'navExpenses' | 'useBoth' }>
+                ).map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`choice-chip ${useMode === opt.id ? 'is-active' : ''}`}
+                    aria-pressed={useMode === opt.id}
+                    onClick={() => void updateSettings({ useMode: opt.id })}
+                  >
+                    {t(opt.key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {useMode !== 'expenses' && (
+              <div className="form-field">
+                <label>{t('shopTypesLabel')}</label>
+                <div className="chip-wrap-row" role="group" aria-label={t('shopTypesLabel')}>
+                  {SHOP_TYPE_PRESETS.map(p => {
+                    const active = shopTypes.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`choice-chip ${active ? 'is-active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => toggleShopType(p.id)}
+                      >
+                        {language === 'ur' ? p.nameUr : p.nameEn}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -260,63 +316,67 @@ export function Settings() {
           </div>
         </section>
 
-        {/* Section 3b: Monthly Summary & Reminder Templates */}
-        <section className="settings-group">
-          <h2 className="settings-group-title">{t('overview')}</h2>
-          <div className="settings-group-card">
-            <Link to="/summary" className="setting-row top-customer-link monthly-summary-link-row">
-              <span className="setting-label flex items-center gap-2">
-                <BarChart3 size={18} className="text-muted" aria-hidden="true" />
-                <span>{t('monthlySummary')}</span>
-              </span>
-              <span className="text-xs text-muted shrink-0" aria-hidden="true">→</span>
-            </Link>
-          </div>
-        </section>
+        {/* Section 3b: Monthly Summary & Reminder Templates (Khata only) */}
+        {useMode !== 'expenses' && (
+          <>
+            <section className="settings-group">
+              <h2 className="settings-group-title">{t('overview')}</h2>
+              <div className="settings-group-card">
+                <Link to="/summary" className="setting-row top-customer-link monthly-summary-link-row">
+                  <span className="setting-label flex items-center gap-2">
+                    <BarChart3 size={18} className="text-muted" aria-hidden="true" />
+                    <span>{t('monthlySummary')}</span>
+                  </span>
+                  <span className="text-xs text-muted shrink-0" aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </section>
 
-        <section className="settings-group">
-          <h2 className="settings-group-title">{t('reminderTemplateLabel')}</h2>
-          <div className="settings-group-card settings-group-card-padded template-editor-card">
-            <p className="text-xs text-muted">{t('reminderTemplateHelp')}</p>
-            <textarea
-              className="form-control-textarea template-textarea"
-              rows={3}
-              aria-label={t('reminderTemplateLabel')}
-              value={prefs.reminderTemplate ?? REMINDER_PRESETS.roman}
-              onChange={e => setReminderTemplate(e.target.value)}
-            />
-            <div className="template-presets-row">
-              <button
-                type="button"
-                className="template-preset-btn"
-                onClick={() => setReminderTemplate(REMINDER_PRESETS.en)}
-              >
-                {t('presetEnglish')}
-              </button>
-              <button
-                type="button"
-                className="template-preset-btn"
-                onClick={() => setReminderTemplate(REMINDER_PRESETS.ur)}
-              >
-                {t('presetUrdu')}
-              </button>
-              <button
-                type="button"
-                className="template-preset-btn"
-                onClick={() => setReminderTemplate(REMINDER_PRESETS.roman)}
-              >
-                {t('presetRomanUrdu')}
-              </button>
-              <button
-                type="button"
-                className="template-preset-btn"
-                onClick={() => setReminderTemplate(null)}
-              >
-                {t('resetDefault')}
-              </button>
-            </div>
-          </div>
-        </section>
+            <section className="settings-group">
+              <h2 className="settings-group-title">{t('reminderTemplateLabel')}</h2>
+              <div className="settings-group-card settings-group-card-padded template-editor-card">
+                <p className="text-xs text-muted">{t('reminderTemplateHelp')}</p>
+                <textarea
+                  className="form-control-textarea template-textarea"
+                  rows={3}
+                  aria-label={t('reminderTemplateLabel')}
+                  value={prefs.reminderTemplate ?? REMINDER_PRESETS.roman}
+                  onChange={e => setReminderTemplate(e.target.value)}
+                />
+                <div className="template-presets-row">
+                  <button
+                    type="button"
+                    className="template-preset-btn"
+                    onClick={() => setReminderTemplate(REMINDER_PRESETS.en)}
+                  >
+                    {t('presetEnglish')}
+                  </button>
+                  <button
+                    type="button"
+                    className="template-preset-btn"
+                    onClick={() => setReminderTemplate(REMINDER_PRESETS.ur)}
+                  >
+                    {t('presetUrdu')}
+                  </button>
+                  <button
+                    type="button"
+                    className="template-preset-btn"
+                    onClick={() => setReminderTemplate(REMINDER_PRESETS.roman)}
+                  >
+                    {t('presetRomanUrdu')}
+                  </button>
+                  <button
+                    type="button"
+                    className="template-preset-btn"
+                    onClick={() => setReminderTemplate(null)}
+                  >
+                    {t('resetDefault')}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
 
         {/* Section 5: Categories */}
         <section className="settings-group">

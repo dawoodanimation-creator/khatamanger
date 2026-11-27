@@ -2,6 +2,7 @@ import {
   maxAmountPaisa,
   maxBackupBytes,
   type AppSettings,
+  type CustomerCategoryConfig,
   type Ledger,
   type LedgerBackup,
   type ProfileSettings,
@@ -117,6 +118,16 @@ export function decodeLedger(source: string): Ledger {
   if (settings.useMode === 'khata' || settings.useMode === 'expenses' || settings.useMode === 'both') {
     appSettings.useMode = settings.useMode;
   }
+  if (Array.isArray(settings.shopTypes)) {
+    appSettings.shopTypes = settings.shopTypes.filter(
+      (s): s is string => typeof s === 'string' && s.trim().length > 0 && s.length <= 60
+    );
+  }
+  if (Array.isArray(settings.customShopTypes)) {
+    appSettings.customShopTypes = settings.customShopTypes.filter(
+      (s): s is string => typeof s === 'string' && s.trim().length > 0 && s.length <= 60
+    );
+  }
   if (settings.profile && typeof settings.profile === 'object' && !Array.isArray(settings.profile)) {
     const p = object(settings.profile);
     const profile: ProfileSettings = {};
@@ -194,12 +205,27 @@ export function decodeLedger(source: string): Ledger {
     }
   }
 
+  const customerCategories: CustomerCategoryConfig[] = [];
+  if (j.schemaVersion === 2 && j.customerCategories !== undefined) {
+    if (!Array.isArray(j.customerCategories)) throw new Error('Invalid customerCategories');
+    for (const rawCc of j.customerCategories) {
+      const cc = object(rawCc);
+      customerCategories.push({
+        id: text(cc, 'id', 60),
+        nameEn: text(cc, 'nameEn', 60),
+        nameUr: text(cc, 'nameUr', 60, true),
+        hidden: typeof cc.hidden === 'boolean' ? cc.hidden : false,
+      });
+    }
+  }
+
   return {
     customers,
     transactions,
     settings: appSettings,
     expenses,
     expenseCategories,
+    ...(customerCategories.length > 0 ? { customerCategories } : {}),
     budgets,
   };
 }

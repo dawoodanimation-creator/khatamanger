@@ -180,7 +180,7 @@ describe('expenses backup, summary, grouping, and CSV', () => {
     ];
     const csv = expensesToCsv(expenses, DEFAULT_EXPENSE_CATEGORIES, 'en');
     expect(csv).toContain('ID,Type,Category,Amount,Date,Payment Method,Note');
-    expect(csv).toContain('e1,Expense,Rent,25000.00,2026-10-05,Cash,Shop rent');
+    expect(csv).toContain('e1,Expense,House Rent,25000.00,2026-10-05,Cash,Shop rent');
 
     const suggestions = detectRecurringBillSuggestions(
       expenses,

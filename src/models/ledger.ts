@@ -11,6 +11,13 @@ export interface ProfileSettings {
   phone?: string;
 }
 
+export interface CustomerCategoryConfig {
+  id: string;
+  nameEn: string;
+  nameUr: string;
+  hidden?: boolean;
+}
+
 export interface AppSettings {
   language: Language;
   darkMode: boolean;
@@ -19,6 +26,8 @@ export interface AppSettings {
   profile?: ProfileSettings;
   onboarded?: boolean;
   useMode?: UseMode;
+  shopTypes?: string[];
+  customShopTypes?: string[];
 }
 
 export interface Ledger {
@@ -27,6 +36,7 @@ export interface Ledger {
   settings: AppSettings;
   expenses?: Expense[];
   expenseCategories?: ExpenseCategory[];
+  customerCategories?: CustomerCategoryConfig[];
   budgets?: CategoryBudget[];
 }
 
