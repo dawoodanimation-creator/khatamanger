@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { useUiPrefs } from '../state/UiPrefsContext';
@@ -10,11 +11,55 @@ interface BalanceSummaryProps {
   onToggleHidden: () => void;
 }
 
+function useAnimatedAmount(target: number, disabled: boolean): number {
+  const [display, setDisplay] = useState(target);
+
+  useEffect(() => {
+    if (disabled) {
+      setDisplay(target);
+      return;
+    }
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reducedMotion || typeof requestAnimationFrame === 'undefined') {
+      setDisplay(target);
+      return;
+    }
+
+    const startVal = display;
+    if (startVal === target) return;
+    const duration = 350;
+    const startTime = performance.now();
+    let rafId = 0;
+
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(startVal + (target - startVal) * eased));
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, disabled]);
+
+  return disabled ? target : display;
+}
+
 export function BalanceSummary({ outstanding, payable, hidden, onToggleHidden }: BalanceSummaryProps) {
   const { t } = useI18n();
   const { prefs } = useUiPrefs();
-  const outstandingText = hidden ? '••••••' : formatMoney(outstanding, t('currencyLabel'), prefs.numberFormat);
-  const payableText = hidden ? '••••••' : formatMoney(payable, t('currencyLabel'), prefs.numberFormat);
+  const animOutstanding = useAnimatedAmount(outstanding, hidden);
+  const animPayable = useAnimatedAmount(payable, hidden);
+  const outstandingText = hidden
+    ? '••••••'
+    : formatMoney(animOutstanding, t('currencyLabel'), prefs.numberFormat);
+  const payableText = hidden
+    ? '••••••'
+    : formatMoney(animPayable, t('currencyLabel'), prefs.numberFormat);
   const shouldStack = !hidden && (outstandingText.length >= 13 || payableText.length >= 13);
 
   return (

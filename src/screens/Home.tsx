@@ -22,6 +22,7 @@ export function Home() {
   const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const index = ledgerIndex(ledger);
   const hidden = !!ledger.settings.hideBalances;
@@ -60,14 +61,36 @@ export function Home() {
     return { all: ledger.customers.length, receive, pay, settled, overdue };
   }, [ledger.customers, index.balances, overdueByCustomer]);
 
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of ledger.customers) {
+      if (c.category?.trim()) set.add(c.category.trim());
+    }
+    return Array.from(set);
+  }, [ledger.customers]);
+
+  const categoryLabels: Record<string, string> = {
+    Regular: t('catRegular'),
+    Wholesale: t('catWholesale'),
+    Family: t('catFamily'),
+    'Friend/Neighbour': t('catFriend'),
+    Staff: t('catStaff'),
+    Supplier: t('catSupplier'),
+  };
+
   const matchingCustomers = useMemo(() => {
     const search = query.trim().toLowerCase();
     return sorted.filter(c => {
       const matchesSearch =
         !search ||
         c.name.toLowerCase().includes(search) ||
-        phoneMatches(c.phone, search);
+        phoneMatches(c.phone, search) ||
+        (c.address ? c.address.toLowerCase().includes(search) : false);
       if (!matchesSearch) return false;
+
+      if (categoryFilter !== 'all' && c.category !== categoryFilter) {
+        return false;
+      }
 
       const bal = index.balances.get(c.id) ?? 0;
       if (filter === 'receive') return bal > 0;
@@ -76,7 +99,7 @@ export function Home() {
       if (filter === 'overdue') return overdueByCustomer.has(c.id);
       return true;
     });
-  }, [sorted, query, filter, index.balances, overdueByCustomer]);
+  }, [sorted, query, filter, categoryFilter, index.balances, overdueByCustomer]);
 
   const pinnedSet = useMemo(() => new Set(prefs.pinnedCustomerIds), [prefs.pinnedCustomerIds]);
   const showBackupBanner = shouldShowBackupBanner(
@@ -93,9 +116,11 @@ export function Home() {
   function clearSearchAndFilter() {
     setQuery('');
     setFilter('all');
+    setCategoryFilter('all');
   }
 
-  const hasFilterOrSearch = query.trim().length > 0 || filter !== 'all';
+  const hasFilterOrSearch =
+    query.trim().length > 0 || filter !== 'all' || categoryFilter !== 'all';
 
   return (
     <>
@@ -174,6 +199,35 @@ export function Home() {
           <FilterChips current={filter} onChange={setFilter} counts={counts} />
         )}
 
+        {/* Optional Customer Category Filter Chips */}
+        {availableCategories.length > 0 && (
+          <div
+            className="home-category-filter-row"
+            role="group"
+            aria-label={t('category')}
+          >
+            <button
+              type="button"
+              className={`choice-chip ${categoryFilter === 'all' ? 'is-active' : ''}`}
+              aria-pressed={categoryFilter === 'all'}
+              onClick={() => setCategoryFilter('all')}
+            >
+              {t('allCategories')}
+            </button>
+            {availableCategories.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                className={`choice-chip ${categoryFilter === cat ? 'is-active' : ''}`}
+                aria-pressed={categoryFilter === cat}
+                onClick={() => setCategoryFilter(categoryFilter === cat ? 'all' : cat)}
+              >
+                {categoryLabels[cat] ?? cat}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Empty States */}
         {ledger.customers.length === 0 ? (
           <div className="empty-state-minimal text-center">
@@ -204,19 +258,21 @@ export function Home() {
           </div>
         ) : (
           <div className="customer-list customer-rows-list">
-            {sorted.map(customer => {
+            {sorted.map((customer, idx) => {
               const balance = index.balances.get(customer.id) ?? 0;
               const history = index.histories.get(customer.id);
               const latestTx =
                 history && history.length > 0
                   ? history[history.length - 1].transaction
                   : null;
+              const isVisible = matchesSet.has(customer.id);
 
               return (
                 <div
-                  className="customer-row"
+                  className={`customer-row ${isVisible && idx < 8 ? 'stagger-row' : ''}`}
+                  style={isVisible && idx < 8 ? ({ '--stagger-idx': idx } as React.CSSProperties) : undefined}
                   key={customer.id}
-                  hidden={!matchesSet.has(customer.id)}
+                  hidden={!isVisible}
                 >
                   <CustomerCard
                     customer={customer}

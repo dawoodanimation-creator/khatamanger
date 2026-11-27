@@ -5,6 +5,7 @@ import {
   UI_PREFS_KEY,
   writeUiPrefs,
   type NumberFormatMode,
+  type QuickItemEntry,
   type SortOrder,
   type UiPrefs,
 } from '../utils/uiPrefs';
@@ -17,6 +18,9 @@ interface UiPrefsContextValue {
   recordBackupNow: () => void;
   dismissBackupBannerToday: (today: string) => void;
   setReminderTemplate: (template: string | null) => void;
+  addCustomCustomerCategory: (category: string) => void;
+  addCustomUdhaarCategory: (category: string) => void;
+  recordQuickItems: (items: Array<{ name: string; pricePaisa?: number }>) => void;
 }
 
 const UiPrefsContext = createContext<UiPrefsContextValue | null>(null);
@@ -66,6 +70,44 @@ export function UiPrefsProvider({ children }: { children: ReactNode }) {
         ...prev,
         reminderTemplate: template && template.trim().length > 0 ? template : null,
       })),
+    addCustomCustomerCategory: category =>
+      update(prev => {
+        const clean = category.trim();
+        const current = prev.customCustomerCategories ?? [];
+        if (!clean || current.includes(clean)) return prev;
+        return { ...prev, customCustomerCategories: [...current, clean] };
+      }),
+    addCustomUdhaarCategory: category =>
+      update(prev => {
+        const clean = category.trim();
+        const current = prev.customUdhaarCategories ?? [];
+        if (!clean || current.includes(clean)) return prev;
+        return { ...prev, customUdhaarCategories: [...current, clean] };
+      }),
+    recordQuickItems: items =>
+      update(prev => {
+        const map = new Map<string, QuickItemEntry>(
+          (prev.quickItems ?? []).map(q => [q.name.toLowerCase(), { ...q }])
+        );
+        for (const it of items) {
+          const cleanName = it.name.trim();
+          if (!cleanName) continue;
+          const key = cleanName.toLowerCase();
+          const existing = map.get(key);
+          if (existing) {
+            existing.count += 1;
+            if (it.pricePaisa !== undefined) existing.defaultPricePaisa = it.pricePaisa;
+          } else {
+            map.set(key, {
+              name: cleanName,
+              count: 1,
+              ...(it.pricePaisa !== undefined ? { defaultPricePaisa: it.pricePaisa } : {}),
+            });
+          }
+        }
+        const sorted = [...map.values()].sort((a, b) => b.count - a.count).slice(0, 20);
+        return { ...prev, quickItems: sorted };
+      }),
   };
 
   return <UiPrefsContext.Provider value={value}>{children}</UiPrefsContext.Provider>;
@@ -74,7 +116,6 @@ export function UiPrefsProvider({ children }: { children: ReactNode }) {
 export function useUiPrefs(): UiPrefsContextValue {
   const ctx = useContext(UiPrefsContext);
   if (ctx) return ctx;
-  // Safe fallback for isolated tests rendering components without UiPrefsProvider.
   const fallback =
     typeof localStorage !== 'undefined' ? readUiPrefs(localStorage) : defaultUiPrefs();
   return {
@@ -85,5 +126,8 @@ export function useUiPrefs(): UiPrefsContextValue {
     recordBackupNow: () => {},
     dismissBackupBannerToday: () => {},
     setReminderTemplate: () => {},
+    addCustomCustomerCategory: () => {},
+    addCustomUdhaarCategory: () => {},
+    recordQuickItems: () => {},
   };
 }

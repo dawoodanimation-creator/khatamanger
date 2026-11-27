@@ -1,6 +1,12 @@
 export type NumberFormatMode = 'pk' | 'intl';
 export type SortOrder = 'recent' | 'highest' | 'name' | 'oldest';
 
+export interface QuickItemEntry {
+  name: string;
+  count: number;
+  defaultPricePaisa?: number;
+}
+
 export interface UiPrefs {
   numberFormat: NumberFormatMode;
   pinnedCustomerIds: string[];
@@ -8,6 +14,9 @@ export interface UiPrefs {
   lastBackupAt: string | null;
   backupBannerDismissedDate: string | null;
   reminderTemplate: string | null;
+  customCustomerCategories?: string[];
+  customUdhaarCategories?: string[];
+  quickItems?: QuickItemEntry[];
 }
 
 export const UI_PREFS_KEY = 'khata-preview.ui.v1';
@@ -64,7 +73,27 @@ export function readUiPrefs(storage: Pick<Storage, 'getItem'> = localStorage): U
         ? parsed.reminderTemplate
         : null;
 
-    return {
+    const customCustomerCategories = Array.isArray(parsed.customCustomerCategories)
+      ? parsed.customCustomerCategories.filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+      : [];
+
+    const customUdhaarCategories = Array.isArray(parsed.customUdhaarCategories)
+      ? parsed.customUdhaarCategories.filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+      : [];
+
+    const quickItems: QuickItemEntry[] = Array.isArray(parsed.quickItems)
+      ? parsed.quickItems.filter(
+          (item): item is QuickItemEntry =>
+            !!item &&
+            typeof item === 'object' &&
+            typeof item.name === 'string' &&
+            item.name.trim().length > 0 &&
+            typeof item.count === 'number' &&
+            item.count > 0
+        )
+      : [];
+
+    const result: UiPrefs = {
       numberFormat,
       pinnedCustomerIds,
       sortOrder,
@@ -72,6 +101,16 @@ export function readUiPrefs(storage: Pick<Storage, 'getItem'> = localStorage): U
       backupBannerDismissedDate,
       reminderTemplate,
     };
+    if (customCustomerCategories.length > 0) {
+      result.customCustomerCategories = customCustomerCategories;
+    }
+    if (customUdhaarCategories.length > 0) {
+      result.customUdhaarCategories = customUdhaarCategories;
+    }
+    if (quickItems.length > 0) {
+      result.quickItems = quickItems;
+    }
+    return result;
   } catch {
     return defaults;
   }

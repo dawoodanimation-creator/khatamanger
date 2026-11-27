@@ -14,10 +14,16 @@ export interface TopCustomerBalance {
   balancePaisa: number;
 }
 
+export interface CategoryTotal {
+  category: string;
+  amountPaisa: number;
+}
+
 export interface MonthlySummaryData {
   thisMonth: MonthTotals;
   lastMonth: MonthTotals;
   topCustomers: TopCustomerBalance[];
+  givenByCategory: CategoryTotal[];
 }
 
 function monthKeyFor(year: number, monthIndex0: number): string {
@@ -38,12 +44,18 @@ export function computeMonthlySummary(
   const thisMonth: MonthTotals = { monthKey: thisKey, creditPaisa: 0, paymentPaisa: 0, netPaisa: 0 };
   const lastMonth: MonthTotals = { monthKey: lastKey, creditPaisa: 0, paymentPaisa: 0, netPaisa: 0 };
 
+  const categoryTotals = new Map<string, number>();
+
   for (const tx of ledger.transactions) {
     const key = tx.date.slice(0, 7);
     const target = key === thisKey ? thisMonth : key === lastKey ? lastMonth : null;
     if (!target) continue;
     if (tx.kind === 'credit') {
       target.creditPaisa += tx.amountPaisa;
+      if (key === thisKey) {
+        const cat = tx.category?.trim() || 'Other';
+        categoryTotals.set(cat, (categoryTotals.get(cat) ?? 0) + tx.amountPaisa);
+      }
     } else {
       target.paymentPaisa += tx.amountPaisa;
     }
@@ -62,5 +74,9 @@ export function computeMonthlySummary(
     .sort((a, b) => b.balancePaisa - a.balancePaisa)
     .slice(0, 5);
 
-  return { thisMonth, lastMonth, topCustomers };
+  const givenByCategory: CategoryTotal[] = [...categoryTotals.entries()]
+    .map(([category, amountPaisa]) => ({ category, amountPaisa }))
+    .sort((a, b) => b.amountPaisa - a.amountPaisa);
+
+  return { thisMonth, lastMonth, topCustomers, givenByCategory };
 }

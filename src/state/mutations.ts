@@ -9,7 +9,17 @@ export function ensureExactBalances(ledger: Ledger): Ledger {
 }
 export function saveCustomer(ledger: Ledger, customer: Customer): Ledger {
   if (Object.keys(validateCustomer(customer)).length > 0) throw new Error('Invalid customer');
-  const clean = { ...customer, name: customer.name.trim(), phone: customer.phone.trim(), note: customer.note.trim() };
+  const clean: Customer = {
+    id: customer.id,
+    name: customer.name.trim(),
+    phone: customer.phone.trim(),
+    note: customer.note.trim(),
+    ...(customer.category?.trim() ? { category: customer.category.trim() } : {}),
+    ...(customer.address?.trim() ? { address: customer.address.trim() } : {}),
+    ...(customer.whatsappPhone?.trim() ? { whatsappPhone: customer.whatsappPhone.trim() } : {}),
+    ...(customer.creditLimitPaisa !== undefined ? { creditLimitPaisa: customer.creditLimitPaisa } : {}),
+    ...(customer.defaultDueDays !== undefined ? { defaultDueDays: customer.defaultDueDays } : {}),
+  };
   const exists = ledger.customers.some(c => c.id === clean.id);
   return { ...ledger, customers: exists ? ledger.customers.map(c => c.id === clean.id ? clean : c) : [...ledger.customers, clean] };
 }

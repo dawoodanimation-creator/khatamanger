@@ -91,8 +91,11 @@ export function CustomerDetail() {
   if (!customer) return <MissingCustomer />;
 
   const initials = getInitials(customer.name);
+  const waCustomer = customer.whatsappPhone
+    ? { ...customer, phone: customer.whatsappPhone }
+    : customer;
   const whatsapp = buildCustomReminderLink(
-    customer,
+    waCustomer,
     balance,
     true,
     prefs.reminderTemplate,
@@ -116,13 +119,34 @@ export function CustomerDetail() {
   );
   const chronologicalHistory = runningHistoryFor(ledger, customer.id);
   const statementWaHref = statementWhatsAppLink(
-    customer,
+    waCustomer,
     chronologicalHistory,
     balance,
     t('currencyLabel'),
     prefs.numberFormat,
     language
   );
+
+  const categoryLabels: Record<string, string> = {
+    Regular: t('catRegular'),
+    Wholesale: t('catWholesale'),
+    Family: t('catFamily'),
+    'Friend/Neighbour': t('catFriend'),
+    Staff: t('catStaff'),
+    Supplier: t('catSupplier'),
+  };
+  const categoryDisplay = customer.category
+    ? categoryLabels[customer.category] ?? customer.category
+    : null;
+  const creditLimit = customer.creditLimitPaisa;
+  const usedCredit = Math.max(0, balance);
+  const limitRatio = creditLimit && creditLimit > 0 ? usedCredit / creditLimit : 0;
+  const limitClass =
+    creditLimit && usedCredit > creditLimit
+      ? 'is-over'
+      : limitRatio >= 0.8
+        ? 'is-warning'
+        : '';
 
   async function confirmDeleteTransaction() {
     if (!txToDelete || busy) return;
@@ -238,12 +262,43 @@ export function CustomerDetail() {
                   <span>{t('call')}</span>
                 </a>
               </div>
+              {(categoryDisplay || customer.address) && (
+                <div className="customer-meta-row">
+                  {categoryDisplay && (
+                    <span className="customer-category-pill">{categoryDisplay}</span>
+                  )}
+                  {customer.address && (
+                    <span className="customer-address-text" dir="auto">
+                      {customer.address}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="detail-balance-block">
             <span className="detail-balance-label">{t('balance')}</span>
             <Balance paisa={balance} customerName={customer.name} />
+            {creditLimit && creditLimit > 0 && (
+              <div className="credit-limit-wrap">
+                <div className={`credit-limit-header ${limitClass}`}>
+                  <span>{t('creditLimit')}</span>
+                  <bdi dir="ltr">
+                    {t('creditLimitUsage', {
+                      used: formatMoney(usedCredit, t('currencyLabel'), prefs.numberFormat),
+                      limit: formatMoney(creditLimit, t('currencyLabel'), prefs.numberFormat),
+                    })}
+                  </bdi>
+                </div>
+                <div className="credit-limit-track" aria-hidden="true">
+                  <div
+                    className={`credit-limit-fill ${limitClass}`}
+                    style={{ width: `${Math.min(100, Math.round(limitRatio * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {customer.note && (
@@ -295,7 +350,6 @@ export function CustomerDetail() {
                     type="button"
                     className="action-pill-btn action-pill-reminder"
                     onClick={() => setShowReminderSheet(true)}
-                    aria-label={t('remind')}
                   >
                     <Send size={15} aria-hidden="true" />
                     <span>{language === 'ur' ? 'یاد دہانی' : 'Remind'}</span>

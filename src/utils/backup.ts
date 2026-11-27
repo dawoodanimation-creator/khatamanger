@@ -29,7 +29,38 @@ export function decodeLedger(source: string): Ledger {
     const c = object(raw);
     const phone = text(c, 'phone', 30);
     if (!validPhone(phone)) throw new Error('Invalid phone');
-    return { id: text(c, 'id', 100), name: text(c, 'name', 100), phone, note: text(c, 'note', 500, true) };
+    const category = typeof c.category === 'string' && c.category.trim() ? text(c, 'category', 60) : undefined;
+    const address = typeof c.address === 'string' && c.address.trim() ? text(c, 'address', 200) : undefined;
+    let whatsappPhone: string | undefined;
+    if (typeof c.whatsappPhone === 'string' && c.whatsappPhone.trim()) {
+      whatsappPhone = text(c, 'whatsappPhone', 30);
+      if (!validPhone(whatsappPhone)) throw new Error('Invalid whatsappPhone');
+    }
+    let creditLimitPaisa: number | undefined;
+    if (c.creditLimitPaisa !== undefined) {
+      if (typeof c.creditLimitPaisa !== 'number' || !Number.isInteger(c.creditLimitPaisa) || c.creditLimitPaisa <= 0 || c.creditLimitPaisa > maxAmountPaisa) {
+        throw new Error('Invalid creditLimitPaisa');
+      }
+      creditLimitPaisa = c.creditLimitPaisa;
+    }
+    let defaultDueDays: number | undefined;
+    if (c.defaultDueDays !== undefined) {
+      if (typeof c.defaultDueDays !== 'number' || !Number.isInteger(c.defaultDueDays) || c.defaultDueDays < 1 || c.defaultDueDays > 3650) {
+        throw new Error('Invalid defaultDueDays');
+      }
+      defaultDueDays = c.defaultDueDays;
+    }
+    return {
+      id: text(c, 'id', 100),
+      name: text(c, 'name', 100),
+      phone,
+      note: text(c, 'note', 500, true),
+      ...(category ? { category } : {}),
+      ...(address ? { address } : {}),
+      ...(whatsappPhone ? { whatsappPhone } : {}),
+      ...(creditLimitPaisa !== undefined ? { creditLimitPaisa } : {}),
+      ...(defaultDueDays !== undefined ? { defaultDueDays } : {}),
+    };
   });
   const transactions: LedgerTransaction[] = j.transactions.map(raw => {
     const t = object(raw);
@@ -45,11 +76,15 @@ export function decodeLedger(source: string): Ledger {
       };
     }) : undefined;
     const dueDate = t.dueDate && typeof t.dueDate === 'string' ? date(t.dueDate) : undefined;
+    const category = typeof t.category === 'string' && t.category.trim() ? text(t, 'category', 60) : undefined;
+    const paymentMethod = typeof t.paymentMethod === 'string' && t.paymentMethod.trim() ? text(t, 'paymentMethod', 40) : undefined;
     return {
       id: text(t, 'id', 100), customerId: text(t, 'customerId', 100), kind: t.kind,
       amountPaisa: t.amountPaisa, date: date(t.date), createdAt: date(t.createdAt), note: text(t, 'note', 500, true),
       ...(items && items.length ? { items } : {}),
       ...(dueDate ? { dueDate } : {}),
+      ...(category ? { category } : {}),
+      ...(paymentMethod ? { paymentMethod } : {}),
     };
   });
   const ids = new Set(customers.map(c => c.id));

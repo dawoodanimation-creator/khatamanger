@@ -24,3 +24,18 @@ export function phoneMatches(phone: string, query: string): boolean {
   const local = /^923\d{9}$/.test(canonical) ? `0${canonical.slice(2)}` : canonical;
   return rawHaystack.includes(rawNeedle) || canonical.includes(needle) || local.includes(rawNeedle);
 }
+
+/** Auto-formats Pakistani mobile numbers (+92 / 0092 / 03XX) into 03XX-XXXXXXX. */
+export function formatPakistaniPhoneInput(input: string): string {
+  const normalized = latinDigits(input);
+  let digits = normalized.replace(/\D/g, '');
+  if (digits.startsWith('0092')) digits = `0${digits.slice(4)}`;
+  else if (digits.startsWith('92') && digits.length >= 12) digits = `0${digits.slice(2)}`;
+  if (/^03\d{9}$/.test(digits)) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  if (/^03\d{3,8}$/.test(digits)) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  return normalized;
+}

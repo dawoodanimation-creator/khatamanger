@@ -23,10 +23,38 @@ import { parseAmount } from '../utils/money';
 import { todayISO, validEntryDate } from '../utils/dates';
 import { getInitials } from '../utils/avatar';
 
+const BUILTIN_UDHAAR_CATEGORIES: Array<{ value: string; labelKey: TranslationKey }> = [
+  { value: 'Rashan/Grocery', labelKey: 'udhaarGrocery' },
+  { value: 'Dairy', labelKey: 'udhaarDairy' },
+  { value: 'Vegetables & Fruit', labelKey: 'udhaarVegFruit' },
+  { value: 'Medicine', labelKey: 'udhaarMedicine' },
+  { value: 'Mobile load', labelKey: 'udhaarMobileLoad' },
+  { value: 'Clothes', labelKey: 'udhaarClothes' },
+  { value: 'Hardware', labelKey: 'udhaarHardware' },
+  { value: 'Services', labelKey: 'udhaarServices' },
+  { value: 'Cash udhaar', labelKey: 'udhaarCash' },
+  { value: 'Other', labelKey: 'udhaarOther' },
+];
+
+const PAYMENT_METHODS: Array<{ value: string; labelKey: TranslationKey }> = [
+  { value: 'Cash', labelKey: 'methodCash' },
+  { value: 'Bank', labelKey: 'methodBank' },
+  { value: 'JazzCash', labelKey: 'methodJazzCash' },
+  { value: 'Easypaisa', labelKey: 'methodEasypaisa' },
+  { value: 'Other', labelKey: 'methodOther' },
+];
+
+function computeDefaultDueDate(defaultDueDays?: number): string {
+  if (!defaultDueDays || defaultDueDays <= 0) return '';
+  const d = new Date();
+  d.setDate(d.getDate() + defaultDueDays);
+  return todayISO(d);
+}
+
 export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const { customerId } = useParams();
   const { ledger, addTransaction, writeError } = useLedger();
-  const { prefs } = useUiPrefs();
+  const { prefs, addCustomUdhaarCategory, recordQuickItems } = useUiPrefs();
   const customer = ledger.customers.find(c => c.id === customerId);
   const { t, language } = useI18n();
   const navigate = useNavigate();
@@ -35,8 +63,15 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
   const [date, setDate] = useState(todayISO());
   const [showCustomDate, setShowCustomDate] = useState(false);
 
-  const [dueDate, setDueDate] = useState('');
-  const [showDueDate, setShowDueDate] = useState(false);
+  const initialDue = kind === 'credit' ? computeDefaultDueDate(customer?.defaultDueDays) : '';
+  const [dueDate, setDueDate] = useState(initialDue);
+  const [showDueDate, setShowDueDate] = useState(Boolean(initialDue));
+
+  const [category, setCategory] = useState('');
+  const [showCustomCat, setShowCustomCat] = useState(false);
+  const [customCatInput, setCustomCatInput] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [note, setNote] = useState('');
   const [showNote, setShowNote] = useState(false);
@@ -113,9 +148,35 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           'Soap',
         ];
 
-  function addItem(suggestedName = '') {
+  const rememberedItems = useMemo(() => {
+    const saved = [...(prefs.quickItems ?? [])].sort((a, b) => b.count - a.count);
+    const seen = new Set(saved.map(i => i.name.toLowerCase()));
+    const extras = commonItems
+      .filter(name => !seen.has(name.toLowerCase()))
+      .map(name => ({ name, defaultPricePaisa: undefined as number | undefined }));
+    return [...saved.map(s => ({ name: s.name, defaultPricePaisa: s.defaultPricePaisa })), ...extras];
+  }, [prefs.quickItems, commonItems]);
+
+  function addItem(suggestedName = '', defaultPricePaisa?: number) {
     setShowItems(true);
-    setItems(prev => [...prev, { id: newId(), name: suggestedName, qty: '', price: '' }]);
+    setItems(prev => [
+      ...prev,
+      {
+        id: newId(),
+        name: suggestedName,
+        qty: '',
+        price: defaultPricePaisa ? (defaultPricePaisa / 100).toFixed(2) : '',
+      },
+    ]);
+  }
+
+  function handleAddCustomUdhaarCategory() {
+    const clean = customCatInput.trim().slice(0, 60);
+    if (!clean) return;
+    addCustomUdhaarCategory(clean);
+    setCategory(clean);
+    setCustomCatInput('');
+    setShowCustomCat(false);
   }
 
   function removeItem(id: string) {
@@ -188,12 +249,37 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           note: note.trim(),
           ...(validItems.length ? { items: validItems } : {}),
           ...(dueDate ? { dueDate } : {}),
+          ...(credit && category ? { category } : {}),
+          ...(!credit && paymentMethod ? { paymentMethod } : {}),
         },
         expectedCustomer.current!
       );
 
-      if (saved) navigate(backTo, { replace: true });
-      else setError(t(writeError()));
+      if (saved) {
+        if (validItems.length > 0) {
+          recordQuickItems(validItems.map(i => ({ name: i.name, pricePaisa: i.pricePaisa })));
+        }
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate(10);
+          } catch {
+            // Ignore vibrate errors
+          }
+        }
+        const reducedMotion =
+          typeof window !== 'undefined' &&
+          window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        if (reducedMotion) {
+          navigate(backTo, { replace: true });
+        } else {
+          setShowSuccess(true);
+          window.setTimeout(() => {
+            navigate(backTo, { replace: true });
+          }, 200);
+        }
+      } else {
+        setError(t(writeError()));
+      }
     } catch {
       setError(t('error'));
     } finally {
@@ -306,7 +392,105 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
               +5,000
             </button>
           </div>
+
+          {credit &&
+            customer.creditLimitPaisa &&
+            customer.creditLimitPaisa > 0 &&
+            projected !== null &&
+            projected > customer.creditLimitPaisa && (
+              <div className="warning-banner" role="status" style={{ marginTop: '10px' }}>
+                {t('creditLimitExceeded')}
+              </div>
+            )}
         </div>
+
+        {/* Udhaar Category Chips or Payment Method Chips */}
+        {credit ? (
+          <div className="form-field">
+            <label>{t('category')}</label>
+            <div className="chip-wrap-row" role="group" aria-label={t('category')}>
+              {[
+                ...BUILTIN_UDHAAR_CATEGORIES.map(c => ({ value: c.value, label: t(c.labelKey) })),
+                ...(prefs.customUdhaarCategories ?? [])
+                  .filter(
+                    c =>
+                      !BUILTIN_UDHAAR_CATEGORIES.some(
+                        b => b.value.toLowerCase() === c.toLowerCase()
+                      )
+                  )
+                  .map(c => ({ value: c, label: c })),
+              ].map(cat => {
+                const active = category === cat.value;
+                return (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    className={`choice-chip ${active ? 'is-active' : ''}`}
+                    aria-pressed={active}
+                    onClick={() => setCategory(active ? '' : cat.value)}
+                    disabled={busy}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="choice-chip choice-chip-add"
+                onClick={() => setShowCustomCat(v => !v)}
+                disabled={busy}
+              >
+                <span>{t('customCategory')}</span>
+              </button>
+            </div>
+            {showCustomCat && (
+              <div className="custom-chip-inline">
+                <input
+                  type="text"
+                  className="form-control-input"
+                  value={customCatInput}
+                  onChange={e => setCustomCatInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomUdhaarCategory();
+                    }
+                  }}
+                  maxLength={60}
+                  placeholder={t('customCategoryPlaceholder')}
+                />
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={handleAddCustomUdhaarCategory}
+                >
+                  {t('save')}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="form-field">
+            <label>{t('paymentMethod')}</label>
+            <div className="chip-wrap-row" role="group" aria-label={t('paymentMethod')}>
+              {PAYMENT_METHODS.map(m => {
+                const active = paymentMethod === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    className={`choice-chip ${active ? 'is-active' : ''}`}
+                    aria-pressed={active}
+                    onClick={() => setPaymentMethod(active ? '' : m.value)}
+                    disabled={busy}
+                  >
+                    {t(m.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Date Options (Three simple options: Today / Yesterday / Pick date) */}
         <div className="form-field date-field-block">
@@ -438,14 +622,17 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
 
               {/* Suggestions */}
               <div className="common-items-chips">
-                {commonItems.map(name => (
+                {rememberedItems.map(item => (
                   <button
-                    key={name}
+                    key={item.name}
                     type="button"
                     className="suggestion-chip"
-                    onClick={() => addItem(name)}
+                    onClick={() => addItem(item.name, item.defaultPricePaisa)}
                   >
-                    + {name}
+                    + {item.name}
+                    {item.defaultPricePaisa
+                      ? ` (${Math.round(item.defaultPricePaisa / 100)})`
+                      : ''}
                   </button>
                 ))}
               </div>
@@ -603,6 +790,24 @@ export function TransactionForm({ kind }: { kind: TransactionKind }) {
           </div>
         </div>
       </form>
+
+      {showSuccess && (
+        <div className="save-success-overlay" aria-live="polite">
+          <div className="save-success-card">
+            <svg className="checkmark-svg" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <circle cx="24" cy="24" r="21" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+              <path
+                className="checkmark-path"
+                d="M14 25l7 7 13-14"
+                stroke="currentColor"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
     </>
   );
 }

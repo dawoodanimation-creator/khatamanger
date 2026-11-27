@@ -124,6 +124,59 @@ export function MonthlySummary() {
         />
 
         <section className="settings-group">
+          <h2 className="settings-group-title">{t('givenByCategory')}</h2>
+          <div className="settings-group-card">
+            {summary.givenByCategory.length === 0 ? (
+              <div className="setting-row">
+                <span className="text-sm text-muted">{t('noMonthlyData')}</span>
+              </div>
+            ) : (
+              <div className="setting-row" style={{ display: 'block' }}>
+                <div className="category-bar-list">
+                  {(() => {
+                    const maxCat = Math.max(...summary.givenByCategory.map(c => c.amountPaisa), 1);
+                    const catMap: Record<string, string> = {
+                      'Rashan/Grocery': t('udhaarGrocery'),
+                      Dairy: t('udhaarDairy'),
+                      'Vegetables & Fruit': t('udhaarVegFruit'),
+                      Medicine: t('udhaarMedicine'),
+                      'Mobile load': t('udhaarMobileLoad'),
+                      Clothes: t('udhaarClothes'),
+                      Hardware: t('udhaarHardware'),
+                      Services: t('udhaarServices'),
+                      'Cash udhaar': t('udhaarCash'),
+                      Other: t('udhaarOther'),
+                    };
+                    return summary.givenByCategory.map(entry => {
+                      const pct = Math.max(4, Math.round((entry.amountPaisa / maxCat) * 100));
+                      return (
+                        <div key={entry.category} className="category-bar-row">
+                          <div className="category-bar-labels">
+                            <span dir="auto">{catMap[entry.category] ?? entry.category}</span>
+                            <bdi dir="ltr" className="font-semibold">
+                              {hidden
+                                ? '••••••'
+                                : formatMoney(
+                                    entry.amountPaisa,
+                                    t('currencyLabel'),
+                                    prefs.numberFormat
+                                  )}
+                            </bdi>
+                          </div>
+                          <div className="category-bar-track" aria-hidden="true">
+                            <div className="category-bar-fill" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="settings-group">
           <h2 className="settings-group-title">{t('topCustomers')}</h2>
           <div className="settings-group-card">
             {summary.topCustomers.length === 0 ? (

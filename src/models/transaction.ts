@@ -18,4 +18,6 @@ export interface LedgerTransaction {
   note: string;
   items?: TransactionItem[];
   dueDate?: string;
+  category?: string;
+  paymentMethod?: string;
 }
