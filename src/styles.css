@@ -1371,7 +1371,7 @@ button:active:not(:disabled),
 }
 
 .expense-income-text {
-  color: var(--color-primary);
+  color: var(--color-payable);
 }
 
 [data-theme='dark'] .segmented-btn.is-active {
@@ -1551,11 +1551,12 @@ button:active:not(:disabled),
 }
 
 .v3-hero-amount {
-  font-size: clamp(28px, 8.5vw, 36px);
+  font-size: clamp(24px, 7.6vw, 36px);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: #ffffff;
 }
 
@@ -1852,8 +1853,17 @@ button:active:not(:disabled),
 [data-theme='dark'] .v3-tint-purple { background: #3b1d52; color: #e9d5ff; }
 
 /* Transaction List Card Rows (72px) */
+.v3-tx-row {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
 .v3-tx-row + .v3-tx-row {
-  border-top: 1px solid var(--v3-border-subtle);
+  border-top: 1px solid var(--v3-border-subtle) !important;
 }
 
 .v3-tx-row-btn {
@@ -1868,6 +1878,26 @@ button:active:not(:disabled),
   text-align: start;
   cursor: pointer;
   color: var(--color-text);
+}
+
+.v3-tx-row-btn .entry-title-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.v3-tx-row-btn .entry-amount-col {
+  flex-shrink: 0;
+  text-align: end;
+}
+
+.v3-quick-amount-row .quick-amount-chip {
+  min-height: 36px;
+  height: auto;
+  width: auto;
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 /* Expenses Day Cards & Rows (64px) */
