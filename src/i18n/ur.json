@@ -348,5 +348,18 @@
   "recentCategories": "حالیہ",
   "searchCategories": "زمرہ تلاش کریں",
   "last7Days": "آخری 7 دن",
-  "udhaarCategoryFilter": "ادھار کا زمرہ"
+  "udhaarCategoryFilter": "ادھار کا زمرہ",
+  "personalCaption": "ذاتی",
+  "remindersTile": "یاددہانی",
+  "summaryTile": "خلاصہ",
+  "paidWith": "ادائیگی کا ذریعہ",
+  "seeAll": "سب دیکھیں",
+  "iUse": "میں استعمال کرتا ہوں",
+  "appLockPin": "ایپ لاک (PIN)",
+  "backupAndRestore": "بیک اپ اور بحالی",
+  "overdueDays": "{days} دن تاخیر",
+  "spentLabel": "خرچ",
+  "onLabel": "آن",
+  "offLabel": "آف",
+  "filtersLabel": "فلٹرز"
 }

@@ -8,7 +8,7 @@ import { useUiPrefs } from '../state/UiPrefsContext';
 import { formatMoney } from '../utils/numberFormat';
 import { whatsAppPhone } from '../utils/reminders';
 import { customerPath } from '../utils/routes';
-import { getInitials } from '../utils/avatar';
+import { getAvatarPalette, getInitials } from '../utils/avatar';
 import { formatRelativeActivity } from '../utils/activity';
 
 interface CustomerCardProps {
@@ -17,6 +17,14 @@ interface CustomerCardProps {
   lastActivityDate?: string | null;
   isPinned?: boolean;
   overdueDueDate?: string | null;
+}
+
+function daysBetween(dueISO: string): number {
+  const due = new Date(`${dueISO.slice(0, 10)}T00:00:00`);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diff = Math.round((now.getTime() - due.getTime()) / 86400000);
+  return Math.max(1, diff);
 }
 
 export const CustomerCard = memo(function CustomerCard({
@@ -36,6 +44,7 @@ export const CustomerCard = memo(function CustomerCard({
   const longPressTimer = useRef<number | null>(null);
 
   const initials = getInitials(customer.name);
+  const avatarPalette = getAvatarPalette(customer.name, ledger.settings.darkMode);
   const isSettled = balance === 0;
   const isOwed = balance > 0;
   const isPayable = balance < 0;
@@ -46,14 +55,10 @@ export const CustomerCard = memo(function CustomerCard({
     ? 'balance-payable'
     : 'balance-settled';
 
-  const relationText = isOwed
-    ? t('toReceive')
-    : isPayable
-    ? t('toPay')
-    : t('settled');
-
   const relativeActivity = formatRelativeActivity(lastActivityDate, language, t);
-  const subtext = relativeActivity || customer.phone;
+  const subParts = [relativeActivity || customer.phone];
+  if (customer.category) subParts.push(customer.category);
+  const subtext = subParts.join(' · ');
   const waNum = whatsAppPhone(customer.phone);
   const isRtl = direction === 'rtl';
 
@@ -93,7 +98,7 @@ export const CustomerCard = memo(function CustomerCard({
 
   return (
     <div
-      className={`customer-card customer-row-item ${isSettled ? 'customer-card-settled' : ''} ${
+      className={`customer-card v3-customer-row ${isSettled ? 'customer-card-settled' : ''} ${
         revealed ? 'swipe-revealed' : ''
       }`}
       onTouchStart={onTouchStart}
@@ -102,7 +107,7 @@ export const CustomerCard = memo(function CustomerCard({
     >
       <Link
         to={customerPath(customer.id)}
-        className="customer-card-main-link"
+        className="customer-card-main-link v3-customer-link"
         onClick={e => {
           if (revealed) {
             e.preventDefault();
@@ -110,34 +115,42 @@ export const CustomerCard = memo(function CustomerCard({
           }
         }}
       >
-        <div className="customer-avatar avatar-neutral" aria-hidden="true">
+        <div
+          className="customer-avatar v3-avatar-44"
+          style={{ backgroundColor: avatarPalette.bg, color: avatarPalette.fg }}
+          aria-hidden="true"
+        >
           {initials}
         </div>
 
         <div className="customer-identity">
           <div className="customer-name-line">
-            <strong className="customer-name" dir="auto">
+            <strong className="customer-name v3-row-title" dir="auto">
               {customer.name}
             </strong>
             {isPinned && (
               <Pin size={12} className="customer-pin-icon" aria-label={t('pinned')} />
             )}
           </div>
-          <span className="customer-meta-row" dir="auto">
-            <span className="customer-subtext">{subtext}</span>
-            {overdueDueDate && (
-              <span className="overdue-pill-inline">
-                {t('overdue')} · {overdueDueDate}
-              </span>
-            )}
-          </span>
+          {overdueDueDate ? (
+            <span className="v3-overdue-subtext" dir="auto">
+              {t('overdueDays', { days: String(daysBetween(overdueDueDate)) })}
+            </span>
+          ) : (
+            <span className="customer-subtext v3-row-sub" dir="auto">
+              {subtext}
+            </span>
+          )}
         </div>
 
         <div className={`customer-balance-block ${balanceClass}`}>
-          <bdi className="customer-balance-amount" dir="ltr">
-            {hidden ? '••••••' : formatMoney(balance, t('currencyLabel'), prefs.numberFormat)}
-          </bdi>
-          <span className="customer-relation-label">{relationText}</span>
+          {isSettled ? (
+            <span className="v3-settled-label">{t('settled')}</span>
+          ) : (
+            <bdi className="customer-balance-amount v3-row-amount" dir="ltr">
+              {hidden ? '••••••' : formatMoney(balance, t('currencyLabel'), prefs.numberFormat)}
+            </bdi>
+          )}
         </div>
       </Link>
 

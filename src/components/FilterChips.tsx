@@ -28,25 +28,23 @@ export function FilterChips({ current, onChange, counts }: FilterChipsProps) {
   ];
 
   return (
-    <div className="filter-chips-container" role="radiogroup" aria-label="Customer filters">
-      <div className="filter-tabs-row">
-        {chips.map(chip => {
-          const isActive = current === chip.id;
-          return (
-            <button
-              key={chip.id}
-              type="button"
-              role="radio"
-              aria-checked={isActive}
-              className={`filter-tab-btn ${isActive ? 'filter-tab-active' : ''}`}
-              onClick={() => onChange(chip.id)}
-            >
-              <span className="filter-tab-label">{chip.label}</span>
-              <span className="filter-tab-count">{chip.count}</span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="v3-filter-scroll" role="radiogroup" aria-label="Customer filters">
+      {chips.map(chip => {
+        const isActive = current === chip.id;
+        return (
+          <button
+            key={chip.id}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            className={`v3-pill-btn ${isActive ? 'is-active v3-pill-bounce' : ''}`}
+            onClick={() => onChange(chip.id)}
+          >
+            <span>{chip.label}</span>
+            <span className="v3-pill-count">{chip.count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

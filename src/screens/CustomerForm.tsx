@@ -13,8 +13,8 @@ import { newId } from '../utils/ids';
 import { customerPath } from '../utils/routes';
 import { validateCustomer, type CustomerErrors } from '../utils/validation';
 import { likelyDuplicates } from '../utils/customerIdentity';
-import { formatPakistaniPhoneInput } from '../utils/phone';
-import { getInitials } from '../utils/avatar';
+import { formatPakistaniPhoneInput, validPhone } from '../utils/phone';
+import { getAvatarPalette, getInitials } from '../utils/avatar';
 import { parseAmount } from '../utils/money';
 import { todayISO, validEntryDate } from '../utils/dates';
 
@@ -347,18 +347,22 @@ export function CustomerForm() {
       />
 
       <form className="page-content customer-form-page" onSubmit={e => void submit(e)} noValidate>
-        {/* Live Avatar Preview */}
-        <div className="avatar-preview-wrap">
-          <div className="avatar-preview-circle" aria-hidden="true">
-            {name.trim() ? previewInitials : <User size={24} />}
-          </div>
-          <div className="avatar-preview-meta">
-            {name.trim() && <div className="avatar-preview-name">{name.trim()}</div>}
-            <div className="avatar-preview-sub">
-              <bdi dir="ltr">{phone.trim() || '03XX-XXXXXXX'}</bdi>
-              {category ? ` • ${allCategories.find(c => c.value === category)?.label ?? category}` : ''}
-            </div>
-          </div>
+        {/* Live 72px Avatar Preview */}
+        <div className="v3-avatar-preview-center">
+          {(() => {
+            const pal = name.trim()
+              ? getAvatarPalette(name.trim(), ledger.settings.darkMode)
+              : null;
+            return (
+              <div
+                className="v3-avatar-72"
+                style={pal ? { backgroundColor: pal.bg, color: pal.fg } : undefined}
+                aria-hidden="true"
+              >
+                {name.trim() ? previewInitials : <User size={28} />}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Non-blocking Live Duplicate Check */}
@@ -417,32 +421,39 @@ export function CustomerForm() {
         {/* Phone Field */}
         <div className="form-field">
           <label htmlFor="customer-phone">{t('phone')}</label>
-          <input
-            id="customer-phone"
-            className="form-control-input"
-            value={phone}
-            onChange={e => {
-              const formatted = formatPakistaniPhoneInput(e.target.value);
-              setPhone(formatted);
-              if (touched.phone || errors.phone) {
-                const next = buildErrors({ phone: formatted });
-                setErrors(prev => ({ ...prev, phone: next.phone }));
-              }
-            }}
-            onBlur={() => markTouchedAndValidate('phone')}
-            onKeyDown={e => {
-              if (!existing && openingType !== 'none') handleEnterNext(e, 'opening-amount');
-            }}
-            maxLength={30}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            dir="ltr"
-            placeholder="03XX-XXXXXXX"
-            aria-invalid={!!errors.phone}
-            aria-describedby={errors.phone ? 'phone-error' : undefined}
-            disabled={busy}
-          />
+          <div className="v3-input-with-tick">
+            <input
+              id="customer-phone"
+              className="form-control-input"
+              value={phone}
+              onChange={e => {
+                const formatted = formatPakistaniPhoneInput(e.target.value);
+                setPhone(formatted);
+                if (touched.phone || errors.phone) {
+                  const next = buildErrors({ phone: formatted });
+                  setErrors(prev => ({ ...prev, phone: next.phone }));
+                }
+              }}
+              onBlur={() => markTouchedAndValidate('phone')}
+              onKeyDown={e => {
+                if (!existing && openingType !== 'none') handleEnterNext(e, 'opening-amount');
+              }}
+              maxLength={30}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              dir="ltr"
+              placeholder="03XX-XXXXXXX"
+              aria-invalid={!!errors.phone}
+              aria-describedby={errors.phone ? 'phone-error' : undefined}
+              disabled={busy}
+            />
+            {validPhone(phone) && (
+              <span className="v3-valid-tick" aria-hidden="true">
+                <Check size={16} />
+              </span>
+            )}
+          </div>
           {errors.phone && (
             <p id="phone-error" className="field-error" role="alert">
               {t(errors.phone)}
@@ -450,17 +461,17 @@ export function CustomerForm() {
           )}
         </div>
 
-        {/* Category Chips */}
+        {/* Category Chips (ONE horizontally scrollable pill row) */}
         <div className="form-field">
           <label>{t('category')}</label>
-          <div className="chip-wrap-row" role="group" aria-label={t('category')}>
+          <div className="v3-filter-scroll" role="group" aria-label={t('category')}>
             {allCategories.map(cat => {
               const active = category === cat.value;
               return (
                 <button
                   key={cat.value}
                   type="button"
-                  className={`choice-chip ${active ? 'is-active' : ''}`}
+                  className={`v3-pill-btn ${active ? 'is-active v3-pill-bounce' : ''}`}
                   aria-pressed={active}
                   onClick={() => setCategory(active ? '' : cat.value)}
                   disabled={busy}
@@ -471,7 +482,7 @@ export function CustomerForm() {
             })}
             <button
               type="button"
-              className="choice-chip choice-chip-add"
+              className="v3-pill-btn choice-chip-add"
               onClick={() => setShowCustomCat(v => !v)}
               disabled={busy}
             >
@@ -506,11 +517,11 @@ export function CustomerForm() {
           {category === 'Supplier' && <p className="field-hint">{t('supplierHint')}</p>}
         </div>
 
-        {/* Opening Balance (Add Customer Only) */}
+        {/* Opening Balance Segmented Control (Add Customer Only) */}
         {!existing && (
           <div className="form-field">
             <label>{t('openingBalance')}</label>
-            <div className="chip-wrap-row" role="group" aria-label={t('openingBalance')}>
+            <div className="v3-segmented-track" role="group" aria-label={t('openingBalance')}>
               {(
                 [
                   { id: 'none', key: 'openingNone' },
@@ -521,7 +532,7 @@ export function CustomerForm() {
                 <button
                   key={opt.id}
                   type="button"
-                  className={`choice-chip ${openingType === opt.id ? 'is-active' : ''}`}
+                  className={`v3-segmented-btn ${openingType === opt.id ? 'is-active v3-pill-bounce' : ''}`}
                   aria-pressed={openingType === opt.id}
                   onClick={() => {
                     setOpeningType(opt.id);
@@ -756,27 +767,28 @@ export function CustomerForm() {
           </p>
         )}
 
-        {/* Sticky Save Bar */}
+        {!existing && (
+          <div style={{ textAlign: 'center', marginTop: '4px' }}>
+            <button
+              type="button"
+              className="v3-text-btn"
+              disabled={busy}
+              onClick={() => void submit(undefined, undefined, true)}
+            >
+              {t('saveAndAddUdhaar')}
+            </button>
+          </div>
+        )}
+
+        {/* Sticky 72px Bar with ONE Full-Width Save */}
         <div
-          className="customer-form-sticky-bar"
+          className="customer-form-sticky-bar v3-sticky-bar-72"
           style={{ bottom: viewportBottom ? `${viewportBottom}px` : undefined }}
         >
-          <div className="form-actions sticky-actions">
-            <button className="button button-primary" type="submit" disabled={busy}>
-              <Check size={18} aria-hidden="true" />
-              <span>{t('save')}</span>
-            </button>
-            {!existing && (
-              <button
-                className="button button-secondary"
-                type="button"
-                disabled={busy}
-                onClick={() => void submit(undefined, undefined, true)}
-              >
-                <span>{t('saveAndAddUdhaar')}</span>
-              </button>
-            )}
-          </div>
+          <button className="button button-primary v3-btn-52" style={{ width: '100%' }} type="submit" disabled={busy}>
+            <Check size={18} aria-hidden="true" />
+            <span>{t('save')}</span>
+          </button>
         </div>
       </form>
 

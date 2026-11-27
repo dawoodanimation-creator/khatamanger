@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { BarChart3, ChevronLeft, ChevronRight, Plus, Search, X } from 'lucide-react';
+import { BarChart3, ChevronLeft, ChevronRight, Plus, SlidersHorizontal, X } from 'lucide-react';
 import { Header } from '../components/Header';
+import { BottomSheet } from '../components/BottomSheet';
 import { ExpenseCategoryIcon } from '../components/ExpenseCategoryIcon';
 import { useI18n } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
@@ -14,7 +15,7 @@ import {
   shiftMonthKey,
 } from '../utils/expenses';
 import { getCategoryLabel, resolveExpenseCategories } from '../utils/expenseCategories';
-import { formatMoney } from '../utils/numberFormat';
+import { formatCompactMoney, formatMoney } from '../utils/numberFormat';
 import { localDate, todayISO } from '../utils/dates';
 
 function formatMonthTitle(monthKey: string, language: 'en' | 'ur'): string {
@@ -24,6 +25,42 @@ function formatMonthTitle(monthKey: string, language: 'en' | 'ur'): string {
     month: 'long',
     year: 'numeric',
   }).format(new Date(y, m - 1, 1));
+}
+
+function useMountCountUp(target: number, disabled: boolean): number {
+  const [display, setDisplay] = useState(target);
+  const animatedOnce = useRef(false);
+
+  useEffect(() => {
+    if (disabled || animatedOnce.current) {
+      setDisplay(target);
+      return;
+    }
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reducedMotion || typeof requestAnimationFrame === 'undefined' || target === 0) {
+      animatedOnce.current = true;
+      setDisplay(target);
+      return;
+    }
+
+    animatedOnce.current = true;
+    const duration = 500;
+    const startTime = performance.now();
+    let rafId = 0;
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(target * eased));
+      if (t < 1) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, disabled]);
+
+  return disabled ? target : display;
 }
 
 export function ExpensesHome() {
@@ -36,6 +73,7 @@ export function ExpensesHome() {
   const [kindFilter, setKindFilter] = useState<'all' | 'expense' | 'income'>('all');
   const [catFilter, setCatFilter] = useState<string>('all');
   const [query, setQuery] = useState('');
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [dismissedSuggestionIds, setDismissedSuggestionIds] = useState<string[]>([]);
   const [deletedUndo, setDeletedUndo] = useState<import('../models/expense').Expense | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -57,6 +95,8 @@ export function ExpensesHome() {
     () => computeExpenseMonthSummary(expenses, monthKey, today),
     [expenses, monthKey, today]
   );
+
+  const animSpent = useMountCountUp(summary.spentPaisa, hidden);
 
   const recurringSuggestions = useMemo(
     () =>
@@ -87,19 +127,11 @@ export function ExpensesHome() {
   }, [monthExpenses, kindFilter, catFilter, query, catMap, language]);
 
   const dayGroups = useMemo(() => groupExpensesByDay(filtered), [filtered]);
+
   const moneyText = (paisa: number) =>
     hidden ? '••••••' : formatMoney(paisa, t('currencyLabel'), prefs.numberFormat);
-  const incomeStr = moneyText(summary.incomePaisa);
-  const netStr = hidden
-    ? '••••••'
-    : `${summary.netPaisa < 0 ? '− ' : ''}${formatMoney(
-        Math.abs(summary.netPaisa),
-        t('currencyLabel'),
-        prefs.numberFormat
-      )}`;
-  const todayStr = moneyText(summary.todaySpentPaisa);
-  const stackSubgrid =
-    !hidden && (incomeStr.length >= 11 || netStr.length >= 11 || todayStr.length >= 11);
+  const compactChipText = (paisa: number) =>
+    hidden ? '••••••' : formatCompactMoney(paisa, t('currencyLabel'), prefs.numberFormat);
 
   const last7Days = useMemo(() => {
     const days: Array<{ day: string; total: number; isToday: boolean }> = [];
@@ -128,11 +160,12 @@ export function ExpensesHome() {
   return (
     <>
       <Header
+        caption={t('personalCaption')}
         title={t('expensesTitle')}
         actions={
           <Link
             to="/expenses/reports"
-            className="icon-button"
+            className="icon-button v3-header-circle-btn"
             aria-label={t('expenseReports')}
             title={t('expenseReports')}
           >
@@ -141,89 +174,81 @@ export function ExpensesHome() {
         }
       />
 
-      <div className="page-content home-content">
-        {/* Month Selector */}
-        <div className="month-selector-bar">
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Previous month"
-            onClick={() => setMonthKey(m => shiftMonthKey(m, -1))}
-          >
-            {direction === 'rtl' ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          </button>
-          <strong className="month-selector-label">{formatMonthTitle(monthKey, language)}</strong>
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Next month"
-            onClick={() => setMonthKey(m => shiftMonthKey(m, 1))}
-          >
-            {direction === 'rtl' ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-          </button>
-        </div>
-
-        {/* Expenses Summary Hero */}
-        <section className="outstanding-card summary-minimalist" aria-label={t('spentThisMonth')}>
-          <div className="expense-hero-main">
-            <span className="summary-label">{t('spentThisMonth')}</span>
-            <bdi dir="ltr" className="summary-amount expense-hero-total">
-              {moneyText(summary.spentPaisa)}
-            </bdi>
+      <div className="page-content home-content v3-page-content">
+        {/* Blue Gradient Hero Card with Month Switcher + 7-day Bars + Income/Today Chips */}
+        <section
+          className="v3-hero-card v3-hero-expenses v3-rise"
+          style={{ '--rise-idx': 0 } as React.CSSProperties}
+          aria-label={t('spentThisMonth')}
+        >
+          <div className="v3-hero-month-row">
+            <button
+              type="button"
+              className="v3-hero-month-btn"
+              aria-label="Previous month"
+              onClick={() => setMonthKey(m => shiftMonthKey(m, -1))}
+            >
+              {direction === 'rtl' ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+            <strong className="v3-hero-month-title">{formatMonthTitle(monthKey, language)}</strong>
+            <button
+              type="button"
+              className="v3-hero-month-btn"
+              aria-label="Next month"
+              onClick={() => setMonthKey(m => shiftMonthKey(m, 1))}
+            >
+              {direction === 'rtl' ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+            </button>
           </div>
-          <div className={`expense-hero-subgrid ${stackSubgrid ? 'expense-hero-subgrid-stacked' : ''}`}>
-            <div className="expense-hero-stat">
-              <span className="summary-label">{t('incomeThisMonth')}</span>
-              <bdi dir="ltr" className="font-semibold expense-income-text expense-stat-amount">
-                {incomeStr}
-              </bdi>
+
+          <div className="v3-hero-expense-body">
+            <div>
+              <span className="v3-hero-label">{t('spentThisMonth')}</span>
+              <div>
+                <bdi
+                  dir="ltr"
+                  className="v3-hero-amount"
+                  style={{ fontSize: 'clamp(28px, 8vw, 34px)' }}
+                  aria-live="off"
+                  aria-label={moneyText(summary.spentPaisa)}
+                >
+                  {moneyText(animSpent)}
+                </bdi>
+              </div>
             </div>
-            <div className="expense-hero-stat">
-              <span className="summary-label">{t('netBalance')}</span>
-              <bdi dir="ltr" className="font-semibold expense-stat-amount">
-                {netStr}
-              </bdi>
+
+            <div className="mini-bars-7d" aria-hidden="true">
+              {last7Days.map((d, idx) => {
+                const h = d.total > 0 ? Math.max(6, Math.round((d.total / max7d) * 34)) : 4;
+                return (
+                  <div
+                    key={d.day}
+                    className={`mini-bar-col v3-bar-7d ${d.isToday ? 'is-today' : ''}`}
+                    style={{ height: `${h}px`, '--bar-idx': idx } as React.CSSProperties}
+                  />
+                );
+              })}
             </div>
-            <div className="expense-hero-stat">
-              <span className="summary-label">{t('todaySpent')}</span>
-              <bdi dir="ltr" className="font-semibold expense-stat-amount">
-                {todayStr}
-              </bdi>
-            </div>
+          </div>
+
+          <div className="v3-hero-chips-row">
+            <span className="v3-hero-chip v3-hero-chip-income" aria-label={`${t('incomeThisMonth')} ${moneyText(summary.incomePaisa)}`}>
+              <span>{t('incomeThisMonth')}</span>{' '}
+              <bdi dir="ltr">{compactChipText(summary.incomePaisa)}</bdi>
+            </span>
+            <span className="v3-hero-chip" aria-label={`${t('todaySpent')} ${moneyText(summary.todaySpentPaisa)}`}>
+              <span>{t('todaySpent')}</span>{' '}
+              <bdi dir="ltr">{compactChipText(summary.todaySpentPaisa)}</bdi>
+            </span>
           </div>
         </section>
-
-        {/* Today Rounded Card + 7-Day Mini Bar Chart */}
-        <div className="today-mini-chart-card">
-          <div>
-            <span className="summary-label">{t('todaySpent')}</span>
-            <div>
-              <bdi dir="ltr" className="font-bold" style={{ fontSize: '18px' }}>
-                {todayStr}
-              </bdi>
-            </div>
-            <span className="text-xs text-muted">{t('last7Days')}</span>
-          </div>
-          <div className="mini-bars-7d" aria-hidden="true">
-            {last7Days.map(d => {
-              const h = d.total > 0 ? Math.max(6, Math.round((d.total / max7d) * 34)) : 4;
-              return (
-                <div
-                  key={d.day}
-                  className={`mini-bar-col ${d.isToday ? 'is-today' : ''}`}
-                  style={{ height: `${h}px` }}
-                />
-              );
-            })}
-          </div>
-        </div>
 
         {/* P2 Recurring Monthly Bill Suggestion */}
         {recurringSuggestions.slice(0, 1).map(s => {
           const cat = catMap.get(s.categoryId);
           const catName = getCategoryLabel(cat, language, s.categoryId);
           return (
-            <div key={s.categoryId} className="backup-reminder-banner" role="status">
+            <div key={s.categoryId} className="v3-amber-chip" role="status">
               <Link
                 to={`/expenses/new?categoryId=${encodeURIComponent(s.categoryId)}&amount=${(
                   s.suggestedAmountPaisa / 100
@@ -247,89 +272,44 @@ export function ExpensesHome() {
           );
         })}
 
-        {/* Search in notes */}
+        {/* Controls Row: Segmented All / Spent / Income + 52px Filter Button */}
         {monthExpenses.length > 0 && (
-          <>
-            <div className="search-sort-row">
-              <div className="search-field flex items-center gap-2">
-                <Search aria-hidden="true" className="search-icon" size={18} />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  aria-label={t('searchExpenses')}
-                  placeholder={t('searchExpenses')}
-                  className="search-input-minimal"
-                />
-                {query && (
+          <div className="v3-controls-row v3-rise" style={{ '--rise-idx': 1 } as React.CSSProperties}>
+            <div className="v3-segmented-track" style={{ flex: 1 }} role="tablist" aria-label={t('expensesTitle')}>
+              {(
+                [
+                  { id: 'all', label: t('filterAll') },
+                  { id: 'expense', label: t('spentLabel') },
+                  { id: 'income', label: t('incomeKind') },
+                ] as const
+              ).map(tab => {
+                const isActive = kindFilter === tab.id;
+                return (
                   <button
+                    key={tab.id}
                     type="button"
-                    className="search-clear-btn"
-                    aria-label="Clear search"
-                    onClick={() => setQuery('')}
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`v3-segmented-btn ${isActive ? 'is-active v3-pill-bounce' : ''}`}
+                    onClick={() => setKindFilter(tab.id)}
                   >
-                    <X size={16} aria-hidden="true" />
+                    {tab.label}
                   </button>
-                )}
-              </div>
+                );
+              })}
             </div>
-
-            {/* Type Filter Tabs (same style as Khata Home filter tabs) */}
-            <div className="filter-chips-container">
-              <div className="filter-tabs-row" role="tablist" aria-label={t('expensesTitle')}>
-                {(
-                  [
-                    { id: 'all', label: t('filterAll') },
-                    { id: 'expense', label: t('expenseKind') },
-                    { id: 'income', label: t('incomeKind') },
-                  ] as const
-                ).map(tab => {
-                  const isActive = kindFilter === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={isActive}
-                      className={`filter-tab-btn ${isActive ? 'filter-tab-active' : ''}`}
-                      onClick={() => setKindFilter(tab.id)}
-                    >
-                      <span className="filter-tab-label">{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Category Filter Chips */}
-            {usedCatIds.length > 1 && (
-              <div className="home-category-filter-row" role="group" aria-label={t('category')}>
-                <button
-                  type="button"
-                  className={`choice-chip ${catFilter === 'all' ? 'is-active' : ''}`}
-                  onClick={() => setCatFilter('all')}
-                >
-                  {t('allCategories')}
-                </button>
-                {usedCatIds.map(cid => {
-                  const cat = catMap.get(cid);
-                  return (
-                    <button
-                      key={cid}
-                      type="button"
-                      className={`choice-chip ${catFilter === cid ? 'is-active' : ''}`}
-                      onClick={() => setCatFilter(catFilter === cid ? 'all' : cid)}
-                    >
-                      {getCategoryLabel(cat, language, cid)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </>
+            <button
+              type="button"
+              className="v3-filter-icon-btn"
+              aria-label={t('filtersLabel')}
+              onClick={() => setShowFilterSheet(true)}
+            >
+              <SlidersHorizontal size={20} aria-hidden="true" />
+            </button>
+          </div>
         )}
 
-        {/* Day-grouped list or empty state */}
+        {/* Day-grouped Cards or Empty State */}
         {monthExpenses.length === 0 ? (
           <div className="empty-state-minimal text-center">
             <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true" style={{ margin: '0 auto 12px', color: 'var(--color-primary)' }}>
@@ -360,86 +340,123 @@ export function ExpensesHome() {
             </button>
           </div>
         ) : (
-          <div className="expense-day-groups">
+          <div className="v3-day-cards-stack">
             {dayGroups.map(group => (
-              <section key={group.day} className="expense-day-section">
-                <div className="expense-day-sticky-header">
+              <section key={group.day} className="v3-list-card">
+                <div className="v3-day-card-header">
                   <span>{localDate(group.day, language)}</span>
-                  <bdi dir="ltr" className="text-muted">
-                    {group.totalSpentPaisa > 0 ? `− ${moneyText(group.totalSpentPaisa)}` : moneyText(group.totalIncomePaisa)}
+                  <bdi dir="ltr">
+                    {group.totalSpentPaisa > 0
+                      ? moneyText(group.totalSpentPaisa)
+                      : `+ ${moneyText(group.totalIncomePaisa)}`}
                   </bdi>
                 </div>
-                <div className="customer-rows-list">
-                  {group.entries.map((exp, idx) => {
-                    const cat = catMap.get(exp.categoryId);
-                    const label = getCategoryLabel(cat, language, exp.categoryId);
-                    const isIncome = exp.kind === 'income';
-                    return (
-                      <Link
-                        key={exp.id}
-                        to={`/expenses/${exp.id}/edit`}
-                        className={`expense-row-link ${idx < 8 ? 'stagger-row' : ''}`}
-                        style={idx < 8 ? ({ '--stagger-idx': idx } as React.CSSProperties) : undefined}
-                        onTouchStart={e => setTouchStartX(e.touches[0]?.clientX ?? null)}
-                        onTouchEnd={e => {
-                          if (touchStartX === null) return;
-                          const endX = e.changedTouches[0]?.clientX ?? touchStartX;
-                          const delta = touchStartX - endX;
-                          setTouchStartX(null);
-                          if ((direction === 'ltr' && delta > 72) || (direction === 'rtl' && delta < -72)) {
-                            e.preventDefault();
-                            void handleSwipeDelete(exp);
-                          }
+                {group.entries.map((exp, idx) => {
+                  const cat = catMap.get(exp.categoryId);
+                  const label = getCategoryLabel(cat, language, exp.categoryId);
+                  const isIncome = exp.kind === 'income';
+                  return (
+                    <Link
+                      key={exp.id}
+                      to={`/expenses/${exp.id}/edit`}
+                      className={`v3-expense-row ${idx < 8 ? 'v3-row-rise' : ''}`}
+                      style={idx < 8 ? ({ '--stagger-idx': idx } as React.CSSProperties) : undefined}
+                      onTouchStart={e => setTouchStartX(e.touches[0]?.clientX ?? null)}
+                      onTouchEnd={e => {
+                        if (touchStartX === null) return;
+                        const endX = e.changedTouches[0]?.clientX ?? touchStartX;
+                        const delta = touchStartX - endX;
+                        setTouchStartX(null);
+                        if ((direction === 'ltr' && delta > 72) || (direction === 'rtl' && delta < -72)) {
+                          e.preventDefault();
+                          void handleSwipeDelete(exp);
+                        }
+                      }}
+                    >
+                      <span
+                        className="v3-cat-circle-40"
+                        style={{
+                          backgroundColor: `${cat?.color ?? '#475569'}1A`,
+                          color: cat?.color ?? '#475569',
                         }}
                       >
-                        <span
-                          className="cat-icon-badge"
-                          style={{
-                            backgroundColor: `${cat?.color ?? '#475569'}18`,
-                            color: cat?.color ?? '#475569',
-                          }}
-                        >
-                          <ExpenseCategoryIcon name={cat?.icon ?? 'circle-dot'} size={18} />
-                        </span>
-                        <div className="expense-row-meta">
-                          <strong className="expense-row-cat" dir="auto">
-                            <span
-                              className="inline-block w-2 h-2 rounded-full mr-1.5"
-                              style={{ backgroundColor: cat?.color ?? '#475569' }}
-                              aria-hidden="true"
-                            />
-                            {label}
-                          </strong>
-                          {(exp.note || exp.paymentMethod) && (
-                            <span className="expense-row-note" dir="auto">
-                              {[exp.paymentMethod, exp.note].filter(Boolean).join(' • ')}
-                            </span>
-                          )}
-                        </div>
-                        <bdi
-                          dir="ltr"
-                          className={`expense-row-amount ${isIncome ? 'expense-income-text' : ''}`}
-                        >
-                          {isIncome ? '+ ' : ''}
-                          {moneyText(exp.amountPaisa)}
-                        </bdi>
-                      </Link>
-                    );
-                  })}
-                </div>
+                        <ExpenseCategoryIcon name={cat?.icon ?? 'circle-dot'} size={18} />
+                      </span>
+                      <div className="expense-row-meta">
+                        <strong className="expense-row-cat" dir="auto">
+                          {label}
+                        </strong>
+                        {(exp.note || exp.paymentMethod) && (
+                          <span className="expense-row-note" dir="auto">
+                            {[exp.note, exp.paymentMethod].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                      </div>
+                      <bdi
+                        dir="ltr"
+                        className={`expense-row-amount ${isIncome ? 'expense-income-text' : ''}`}
+                      >
+                        {isIncome ? '+ ' : ''}
+                        {moneyText(exp.amountPaisa)}
+                      </bdi>
+                    </Link>
+                  );
+                })}
               </section>
             ))}
           </div>
         )}
       </div>
 
-      {/* Extended Floating Add Expense Button */}
-      <div className="fab-above-nav-wrap">
-        <Link className="button button-primary fab-extended-above-nav" to="/expenses/new">
-          <Plus size={18} aria-hidden="true" />
-          <span>{t('addExpense')}</span>
-        </Link>
-      </div>
+      {/* Round 56px Blue FAB */}
+      <Link className="v3-fab" to="/expenses/new" aria-label={t('addExpense')} title={t('addExpense')}>
+        <Plus size={24} aria-hidden="true" />
+      </Link>
+
+      {/* Filter Bottom Sheet (Note search + Category filter) */}
+      {showFilterSheet && (
+        <BottomSheet title={t('filtersLabel')} onDismiss={() => setShowFilterSheet(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '12px' }}>
+            <input
+              type="search"
+              className="form-control-input"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={t('searchExpenses')}
+              aria-label={t('searchExpenses')}
+            />
+            <div className="chip-wrap-row">
+              <button
+                type="button"
+                className={`v3-pill-btn ${catFilter === 'all' ? 'is-active' : ''}`}
+                onClick={() => setCatFilter('all')}
+              >
+                {t('allCategories')}
+              </button>
+              {usedCatIds.map(cid => {
+                const cat = catMap.get(cid);
+                return (
+                  <button
+                    key={cid}
+                    type="button"
+                    className={`v3-pill-btn ${catFilter === cid ? 'is-active' : ''}`}
+                    onClick={() => setCatFilter(catFilter === cid ? 'all' : cid)}
+                  >
+                    {getCategoryLabel(cat, language, cid)}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              className="button button-primary v3-btn-52"
+              onClick={() => setShowFilterSheet(false)}
+            >
+              {t('finish')}
+            </button>
+          </div>
+        </BottomSheet>
+      )}
 
       {deletedUndo && (
         <div className="undo-snackbar" role="status">

@@ -20,7 +20,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="bottom-nav"
+      className="bottom-nav v3-bottom-nav"
       style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
       aria-label="Main navigation"
     >
@@ -30,7 +30,9 @@ export function BottomNav() {
           className={`bottom-nav-item ${isKhata ? 'is-active' : ''}`}
           aria-current={isKhata ? 'page' : undefined}
         >
-          <BookOpen size={20} aria-hidden="true" />
+          <span className="v3-nav-pill">
+            <BookOpen size={20} aria-hidden="true" />
+          </span>
           <span>{t('navKhata')}</span>
         </Link>
       )}
@@ -40,7 +42,9 @@ export function BottomNav() {
           className={`bottom-nav-item ${isExpenses ? 'is-active' : ''}`}
           aria-current={isExpenses ? 'page' : undefined}
         >
-          <ReceiptText size={20} aria-hidden="true" />
+          <span className="v3-nav-pill">
+            <ReceiptText size={20} aria-hidden="true" />
+          </span>
           <span>{t('navExpenses')}</span>
         </Link>
       )}
@@ -49,7 +53,9 @@ export function BottomNav() {
         className={`bottom-nav-item ${isSettings ? 'is-active' : ''}`}
         aria-current={isSettings ? 'page' : undefined}
       >
-        <Settings size={20} aria-hidden="true" />
+        <span className="v3-nav-pill">
+          <Settings size={20} aria-hidden="true" />
+        </span>
         <span>{t('navSettings')}</span>
       </Link>
     </nav>

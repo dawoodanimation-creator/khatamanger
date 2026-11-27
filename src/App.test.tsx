@@ -193,10 +193,11 @@ test('blocked localStorage keeps the unsaved form and existing ledger', async ()
 
 test('Urdu settings persist and apply RTL to customer forms', async () => {
   const user = userEvent.setup(); open('/settings');
+  await user.click(screen.getByRole('button', { name: /Language/i }));
   await user.click(screen.getByRole('button', { name: 'اردو' }));
   expect(document.documentElement.dir).toBe('rtl');
   expect(screen.getByRole('heading', { name: 'ترتیبات' })).toBeTruthy();
-  await user.click(screen.getByRole('link', { name: 'واپس' }));
+  await user.click(screen.getByRole('link', { name: 'کھاتہ' }));
   await user.click(screen.getByRole('link', { name: 'گاہک شامل کریں' }));
   expect(screen.getByLabelText('نام')).toBeTruthy();
   expect(screen.getByLabelText('فون نمبر').getAttribute('dir')).toBe('ltr');

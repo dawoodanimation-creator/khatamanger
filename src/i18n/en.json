@@ -348,5 +348,18 @@
   "recentCategories": "Recent",
   "searchCategories": "Search categories",
   "last7Days": "Last 7 days",
-  "udhaarCategoryFilter": "Udhaar category"
+  "udhaarCategoryFilter": "Udhaar category",
+  "personalCaption": "Personal",
+  "remindersTile": "Reminders",
+  "summaryTile": "Summary",
+  "paidWith": "Paid with",
+  "seeAll": "See all",
+  "iUse": "I use",
+  "appLockPin": "App lock (PIN)",
+  "backupAndRestore": "Backup and restore",
+  "overdueDays": "Overdue {days} days",
+  "spentLabel": "Spent",
+  "onLabel": "On",
+  "offLabel": "Off",
+  "filtersLabel": "Filters"
 }

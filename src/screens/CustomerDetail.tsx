@@ -38,14 +38,14 @@ import { localDate, monthYearLabel } from '../utils/dates';
 import { customerPath } from '../utils/routes';
 import { buildCustomReminderLink, buildCustomReminderMessage } from '../utils/reminderTemplates';
 import { statementWhatsAppLink } from '../utils/statementShare';
-import { getInitials } from '../utils/avatar';
+import { getAvatarPalette, getInitials } from '../utils/avatar';
 
 export function CustomerDetail() {
   const { customerId } = useParams();
   const { ledger, deleteCustomer, deleteTransaction, addTransaction, writeError } = useLedger();
   const { prefs, togglePinCustomer } = useUiPrefs();
   const customer = ledger.customers.find(c => c.id === customerId);
-  const { t, language } = useI18n();
+  const { t, language, direction } = useI18n();
   const navigate = useNavigate();
 
   const [dialog, setDialog] = useState<'delete' | null>(null);
@@ -59,6 +59,8 @@ export function CustomerDetail() {
   const [error, setError] = useState('');
 
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [selectedTxForSheet, setSelectedTxForSheet] = useState<LedgerTransaction | null>(null);
+  const [txTouchStartX, setTxTouchStartX] = useState<number | null>(null);
 
   const balance = customer ? balanceFor(ledger, customer.id) : 0;
   const history = useMemo(
@@ -231,7 +233,6 @@ export function CustomerDetail() {
   return (
     <>
       <Header
-        title={customer.name}
         backTo="/"
         actions={
           <div className="header-actions-group">
@@ -240,43 +241,41 @@ export function CustomerDetail() {
         }
       />
 
-      <div className="page-content detail-content">
-        {/* Top Block: Calm, spacious, no bordered card */}
-        <section className="customer-detail-hero customer-summary">
+      <div className="page-content detail-content v3-page-content">
+        {/* White Hero Card */}
+        <section className="v3-card customer-summary v3-rise" style={{ '--rise-idx': 0 } as React.CSSProperties}>
           <div className="customer-hero-top">
-            <div className="customer-avatar avatar-neutral" aria-hidden="true">
-              {initials}
-            </div>
+            {(() => {
+              const pal = getAvatarPalette(customer.name, ledger.settings.darkMode);
+              return (
+                <div
+                  className="customer-avatar v3-avatar-56"
+                  style={{ backgroundColor: pal.bg, color: pal.fg }}
+                  aria-hidden="true"
+                >
+                  {initials}
+                </div>
+              );
+            })()}
 
             <div className="customer-hero-identity">
-              <strong className="customer-detail-name" dir="auto">
-                {customer.name}
-              </strong>
+              <div className="flex items-center justify-between gap-2">
+                <h1 className="customer-detail-name" dir="auto">
+                  {customer.name}
+                </h1>
+                {categoryDisplay && (
+                  <span className="customer-category-pill shrink-0">{categoryDisplay}</span>
+                )}
+              </div>
               <div className="customer-detail-phone-line">
                 <span className="customer-phone" dir="ltr">
                   <bdi>{customer.phone}</bdi>
                 </span>
-                <a
-                  href={`tel:${customer.phone}`}
-                  className="call-pill-btn"
-                  aria-label={t('call')}
-                  title={t('call')}
-                >
-                  <Phone size={13} aria-hidden="true" />
-                  <span>{t('call')}</span>
-                </a>
               </div>
-              {(categoryDisplay || customer.address) && (
-                <div className="customer-meta-row">
-                  {categoryDisplay && (
-                    <span className="customer-category-pill">{categoryDisplay}</span>
-                  )}
-                  {customer.address && (
-                    <span className="customer-address-text" dir="auto">
-                      {customer.address}
-                    </span>
-                  )}
-                </div>
+              {customer.address && (
+                <span className="customer-address-text" dir="auto">
+                  {customer.address}
+                </span>
               )}
             </div>
           </div>
@@ -297,7 +296,7 @@ export function CustomerDetail() {
                 </div>
                 <div className="credit-limit-track" aria-hidden="true">
                   <div
-                    className={`credit-limit-fill ${limitClass}`}
+                    className={`credit-limit-fill v3-bar-fill ${limitClass}`}
                     style={{ width: `${Math.min(100, Math.round(limitRatio * 100))}%` }}
                   />
                 </div>
@@ -310,63 +309,97 @@ export function CustomerDetail() {
               {customer.note}
             </p>
           )}
-
-          {/* Quick Actions Row (Call, WhatsApp, SMS) */}
-          <div className="customer-hero-actions-row">
-            {balance > 0 && (
-              <section className="reminder-section" aria-label={t('remind')}>
-                <div className="customer-hero-actions-group">
-                  {whatsapp ? (
-                    <a
-                      className="action-pill-btn action-pill-whatsapp"
-                      href={whatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t('whatsapp')}
-                    >
-                      <MessageCircle size={16} aria-hidden="true" />
-                      <span>{t('whatsapp')}</span>
-                    </a>
-                  ) : (
-                    <button
-                      className="action-pill-btn action-pill-whatsapp"
-                      type="button"
-                      onClick={() => setError(t('invalidWhatsApp'))}
-                      aria-label={t('whatsapp')}
-                    >
-                      <MessageCircle size={16} aria-hidden="true" />
-                      <span>{t('whatsapp')}</span>
-                    </button>
-                  )}
-
-                  {sms && (
-                    <a
-                      className="action-pill-btn action-pill-sms"
-                      href={sms}
-                      aria-label={t('sms')}
-                    >
-                      <MessageSquare size={16} aria-hidden="true" />
-                      <span>{t('sms')}</span>
-                    </a>
-                  )}
-
-                  <button
-                    type="button"
-                    className="action-pill-btn action-pill-reminder"
-                    onClick={() => setShowReminderSheet(true)}
-                  >
-                    <Send size={15} aria-hidden="true" />
-                    <span>{language === 'ur' ? 'یاد دہانی' : 'Remind'}</span>
-                  </button>
-                </div>
-
-                <div className="sr-only reminder-message">
-                  {customReminderText}
-                </div>
-              </section>
-            )}
-          </div>
         </section>
+
+        {/* 4 Circular Action Buttons: Call, WhatsApp, SMS, Remind */}
+        {(() => {
+          const grid = (
+            <div className="v3-circle-actions-row v3-rise" style={{ '--rise-idx': 1 } as React.CSSProperties}>
+              <a
+                href={`tel:${customer.phone}`}
+                className="v3-circle-action"
+                aria-label={t('call')}
+              >
+                <span className="v3-circle-icon v3-tint-primary">
+                  <Phone size={20} aria-hidden="true" />
+                </span>
+                <span className="v3-circle-label">{t('call')}</span>
+              </a>
+
+              {whatsapp ? (
+                <a
+                  className="v3-circle-action"
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t('whatsapp')}
+                >
+                  <span className="v3-circle-icon v3-tint-green">
+                    <MessageCircle size={20} aria-hidden="true" />
+                  </span>
+                  <span className="v3-circle-label">{t('whatsapp')}</span>
+                </a>
+              ) : (
+                <button
+                  className="v3-circle-action"
+                  type="button"
+                  onClick={() => setError(t('invalidWhatsApp'))}
+                  aria-label={t('whatsapp')}
+                >
+                  <span className="v3-circle-icon v3-tint-green">
+                    <MessageCircle size={20} aria-hidden="true" />
+                  </span>
+                  <span className="v3-circle-label">{t('whatsapp')}</span>
+                </button>
+              )}
+
+              <a
+                className="v3-circle-action"
+                href={sms ?? `sms:${customer.phone}`}
+                aria-label={t('sms')}
+              >
+                <span className="v3-circle-icon v3-tint-blue">
+                  <MessageSquare size={20} aria-hidden="true" />
+                </span>
+                <span className="v3-circle-label">{t('sms')}</span>
+              </a>
+
+              {balance > 0 ? (
+                <button
+                  type="button"
+                  className="v3-circle-action"
+                  onClick={() => setShowReminderSheet(true)}
+                >
+                  <span className="v3-circle-icon v3-tint-amber">
+                    <Send size={20} aria-hidden="true" />
+                  </span>
+                  <span className="v3-circle-label">{language === 'ur' ? 'یاد دہانی' : 'Remind'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="v3-circle-action"
+                  onClick={() => setShowStatementSheet(true)}
+                >
+                  <span className="v3-circle-icon v3-tint-amber">
+                    <FileText size={20} aria-hidden="true" />
+                  </span>
+                  <span className="v3-circle-label">{t('downloadStatement')}</span>
+                </button>
+              )}
+            </div>
+          );
+
+          if (balance > 0) {
+            return (
+              <section className="reminder-section" aria-label={t('remind')}>
+                {grid}
+                <div className="sr-only reminder-message">{customReminderText}</div>
+              </section>
+            );
+          }
+          return grid;
+        })()}
 
         {/* Transaction History Section */}
         <div className="section-heading history-heading flex items-center justify-between">
@@ -394,15 +427,41 @@ export function CustomerDetail() {
                   <span className="month-label-text">{group.label}</span>
                 </div>
 
-                <ol className="transaction-list">
+                <ol className="v3-list-card transaction-list">
                   {group.entries.map(({ transaction, balancePaisa }) => {
                     const isCredit = transaction.kind === 'credit';
                     const isExpanded = expandedItems.has(transaction.id);
                     const itemCount = transaction.items?.length || 0;
+                    const metaSub = [
+                      localDate(transaction.date, language),
+                      transaction.category,
+                      transaction.paymentMethod,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ');
 
                     return (
-                      <li className="transaction-row-item transaction-card" key={transaction.id}>
-                        <div className="transaction-main-row">
+                      <li
+                        className="v3-tx-row transaction-card"
+                        key={transaction.id}
+                        onTouchStart={e => setTxTouchStartX(e.touches[0]?.clientX ?? null)}
+                        onTouchEnd={e => {
+                          if (txTouchStartX === null) return;
+                          const endX = e.changedTouches[0]?.clientX ?? txTouchStartX;
+                          const delta = txTouchStartX - endX;
+                          setTxTouchStartX(null);
+                          if ((direction === 'ltr' && delta > 72) || (direction === 'rtl' && delta < -72)) {
+                            void deleteTransaction(transaction.id, customer.id).then(ok => {
+                              if (ok) setDeletedUndoTx(transaction);
+                            });
+                          }
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="v3-tx-row-btn"
+                          onClick={() => setSelectedTxForSheet(transaction)}
+                        >
                           <span
                             className={`entry-icon ${
                               isCredit ? 'entry-credit' : 'entry-payment'
@@ -410,9 +469,9 @@ export function CustomerDetail() {
                             aria-hidden="true"
                           >
                             {isCredit ? (
-                              <ArrowUpRight size={17} />
+                              <ArrowUpRight size={18} />
                             ) : (
-                              <ArrowDownLeft size={17} />
+                              <ArrowDownLeft size={18} />
                             )}
                           </span>
 
@@ -420,9 +479,7 @@ export function CustomerDetail() {
                             <strong className="entry-type-title">
                               {t(isCredit ? 'credit' : 'payment')}
                             </strong>
-                            <time dateTime={transaction.date} className="entry-date-text">
-                              {localDate(transaction.date, language)}
-                            </time>
+                            <span className="entry-date-text">{metaSub}</span>
                             {overdueResult.overdueCredits.has(transaction.id) && (
                               <span className="overdue-pill-inline">
                                 {t('overdue')} · {overdueResult.overdueCredits.get(transaction.id)!.dueDate}
@@ -431,25 +488,15 @@ export function CustomerDetail() {
                           </div>
 
                           <div className="entry-amount-col">
-                            <div className="entry-amount-actions">
-                              <bdi
-                                dir="ltr"
-                                className={`entry-amount ${
-                                  isCredit ? 'balance-owed' : 'balance-payable'
-                                }`}
-                              >
-                                {isCredit ? '+' : '−'}{' '}
-                                {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
-                              </bdi>
-                              <button
-                                type="button"
-                                className="entry-delete-btn"
-                                aria-label={t('deleteEntryLabel')}
-                                onClick={() => setTxToDelete(transaction)}
-                              >
-                                <Trash2 size={14} aria-hidden="true" />
-                              </button>
-                            </div>
+                            <bdi
+                              dir="ltr"
+                              className={`entry-amount ${
+                                isCredit ? 'balance-owed' : 'balance-payable'
+                              }`}
+                            >
+                              {isCredit ? '+' : '−'}{' '}
+                              {formatMoney(transaction.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
+                            </bdi>
                             <div className="running-balance-quiet">
                               <span>{t('running')}:</span>{' '}
                               <bdi dir="ltr" className="running-amount">
@@ -457,7 +504,7 @@ export function CustomerDetail() {
                               </bdi>
                             </div>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Collapsible Items Toggle */}
                         {itemCount > 0 && (
@@ -526,23 +573,60 @@ export function CustomerDetail() {
         )}
       </div>
 
-      {/* Sticky Bottom Action Bar (Equal width, 56px, aligned with page margins) */}
-      <div className="transaction-actions side-by-side">
+      {/* Sticky 80px Bottom Action Bar */}
+      <div className="transaction-actions side-by-side v3-sticky-bar-80">
         <Link
-          className="button button-primary btn-udhaar-primary"
+          className="button button-primary v3-btn-52"
           to={customerPath(customer.id, 'credit')}
         >
           <Plus size={18} aria-hidden="true" />
           <span>{t('credit')}</span>
         </Link>
         <Link
-          className="button button-secondary btn-payment-outline"
+          className="button v3-btn-tonal v3-btn-52"
           to={customerPath(customer.id, 'payment')}
         >
           <Banknote size={18} aria-hidden="true" />
           <span>{t('payment')}</span>
         </Link>
       </div>
+
+      {/* Transaction Row Action Sheet */}
+      {selectedTxForSheet && (
+        <BottomSheet
+          title={t(selectedTxForSheet.kind === 'credit' ? 'credit' : 'payment')}
+          onDismiss={() => setSelectedTxForSheet(null)}
+          actions={
+            <button
+              type="button"
+              className="button button-danger"
+              style={{ width: '100%' }}
+              onClick={() => {
+                const tx = selectedTxForSheet;
+                setSelectedTxForSheet(null);
+                setTxToDelete(tx);
+              }}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+              <span>{t('deleteEntryLabel')}</span>
+            </button>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '8px' }}>
+            <strong style={{ fontSize: '20px' }}>
+              <bdi dir="ltr">
+                {formatMoney(selectedTxForSheet.amountPaisa, t('currencyLabel'), prefs.numberFormat)}
+              </bdi>
+            </strong>
+            <span className="text-sm text-muted">
+              {localDate(selectedTxForSheet.date, language)}
+              {selectedTxForSheet.category ? ` · ${selectedTxForSheet.category}` : ''}
+              {selectedTxForSheet.paymentMethod ? ` · ${selectedTxForSheet.paymentMethod}` : ''}
+            </span>
+            {selectedTxForSheet.note && <p className="text-sm">{selectedTxForSheet.note}</p>}
+          </div>
+        </BottomSheet>
+      )}
 
       {/* Reminder Message Bottom Sheet */}
       {showReminderSheet && (

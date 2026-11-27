@@ -26,3 +26,22 @@ export function formatMoney(
   const fraction = String(absolute % 100n).padStart(2, '0');
   return `${currencyLabel} ${whole}.${fraction}`;
 }
+
+export function formatCompactMoney(
+  paisa: number,
+  currencyLabel: string,
+  mode: NumberFormatMode = 'pk'
+): string {
+  const full = formatMoney(paisa, currencyLabel, mode);
+  if (full.length <= 11) return full;
+  const rupees = Math.abs(paisa) / 100;
+  const sign = paisa < 0 ? '− ' : '';
+  if (mode === 'pk') {
+    if (rupees >= 1e7) return `${sign}${currencyLabel} ${(rupees / 1e7).toFixed(2).replace(/\.00$/, '')} Cr`;
+    if (rupees >= 1e5) return `${sign}${currencyLabel} ${(rupees / 1e5).toFixed(1).replace(/\.0$/, '')} L`;
+  } else {
+    if (rupees >= 1e6) return `${sign}${currencyLabel} ${(rupees / 1e6).toFixed(2).replace(/\.00$/, '')}M`;
+    if (rupees >= 1e3) return `${sign}${currencyLabel} ${(rupees / 1e3).toFixed(1).replace(/\.0$/, '')}K`;
+  }
+  return full;
+}

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { CalendarDays, Check, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { BottomSheet } from '../components/BottomSheet';
@@ -7,11 +7,9 @@ import { Modal } from '../components/Modal';
 import { ExpenseCategoryIcon } from '../components/ExpenseCategoryIcon';
 import { useI18n, type TranslationKey } from '../i18n';
 import { useLedger } from '../state/LedgerContext';
-import { useUiPrefs } from '../state/UiPrefsContext';
 import type { Expense, ExpenseKind } from '../models/expense';
 import { getCategoryLabel, getVisibleCategories, resolveExpenseCategories } from '../utils/expenseCategories';
 import { parseAmount } from '../utils/money';
-import { formatMoney } from '../utils/numberFormat';
 import { todayISO, validEntryDate } from '../utils/dates';
 import { newId } from '../utils/ids';
 
@@ -28,7 +26,6 @@ export function ExpenseForm() {
   const { expenseId } = useParams();
   const [searchParams] = useSearchParams();
   const { ledger, saveExpense, deleteExpense, writeError } = useLedger();
-  const { prefs } = useUiPrefs();
   const { t, language } = useI18n();
   const navigate = useNavigate();
 
@@ -180,12 +177,8 @@ export function ExpenseForm() {
     setBusy(false);
   }
 
-  const previewAmount = parseAmount(amount);
-  const topCats = visibleCats.slice(0, 6);
-  if (!topCats.some(c => c.id === categoryId)) {
-    const selected = visibleCats.find(c => c.id === categoryId);
-    if (selected) topCats[topCats.length - 1] = selected;
-  }
+  const recentCats = visibleCats.slice(0, 4);
+  const gridCats = visibleCats.slice(0, 7);
 
   return (
     <>
@@ -205,8 +198,7 @@ export function ExpenseForm() {
           ) : lastExpense ? (
             <button
               type="button"
-              className="button button-secondary text-sm"
-              style={{ minHeight: '44px', padding: '6px 12px' }}
+              className="v3-tonal-pill"
               onClick={handleRepeatLast}
             >
               <RotateCcw size={14} aria-hidden="true" />
@@ -216,12 +208,12 @@ export function ExpenseForm() {
         }
       />
 
-      <form className="page-content form-content transaction-form-page" onSubmit={e => void submit(e)} noValidate>
+      <form className="page-content form-content transaction-form-page v3-page-content" onSubmit={e => void submit(e)} noValidate>
         {/* Segmented Control: Expense / Income */}
-        <div className="segmented-control" role="group" aria-label={t('expensesTitle')}>
+        <div className="v3-segmented-track" role="group" aria-label={t('expensesTitle')}>
           <button
             type="button"
-            className={`segmented-btn ${kind === 'expense' ? 'is-active' : ''}`}
+            className={`v3-segmented-btn ${kind === 'expense' ? 'is-active v3-pill-bounce' : ''}`}
             aria-pressed={kind === 'expense'}
             onClick={() => switchKind('expense')}
           >
@@ -229,7 +221,7 @@ export function ExpenseForm() {
           </button>
           <button
             type="button"
-            className={`segmented-btn ${kind === 'income' ? 'is-active' : ''}`}
+            className={`v3-segmented-btn ${kind === 'income' ? 'is-active v3-pill-bounce' : ''}`}
             aria-pressed={kind === 'income'}
             onClick={() => switchKind('income')}
           >
@@ -237,19 +229,19 @@ export function ExpenseForm() {
           </button>
         </div>
 
-        {/* Big Amount Input */}
-        <div className="form-field amount-field-block">
-          <label htmlFor="expense-amount" className="amount-label">
+        {/* Centred Big Amount Input with Accent Underline */}
+        <div className="v3-centered-amount-block">
+          <label htmlFor="expense-amount" className="v3-centered-amount-label">
             {t('amount')}
           </label>
-          <div className="big-amount-input-wrapper">
-            <span className="big-amount-prefix" aria-hidden="true">
+          <div className="v3-centered-amount-wrap v3-amount-underline">
+            <span className="v3-centered-prefix" aria-hidden="true">
               {t('currencyLabel')}
             </span>
             <input
               id="expense-amount"
               data-entry-focus
-              className="big-amount-input"
+              className="v3-centered-input"
               value={amount}
               onChange={e => {
                 setAmount(e.target.value);
@@ -257,23 +249,17 @@ export function ExpenseForm() {
               }}
               inputMode="decimal"
               dir="ltr"
-              placeholder="0.00"
+              placeholder="0"
               autoFocus
               disabled={busy}
             />
           </div>
-          {previewAmount !== null && (
-            <div className="amount-live-preview">
-              <span>=</span>
-              <strong>{formatMoney(previewAmount, t('currencyLabel'), prefs.numberFormat)}</strong>
-            </div>
-          )}
           {errors.amount && (
             <p className="field-error" role="alert">
               {t(errors.amount)}
             </p>
           )}
-          <div className="quick-amount-chips">
+          <div className="v3-quick-amount-row">
             {[100, 500, 1000, 5000].map(val => (
               <button
                 key={val}
@@ -287,45 +273,69 @@ export function ExpenseForm() {
           </div>
         </div>
 
-        {/* Category Chip Grid + More Sheet */}
+        {/* Recent Row */}
         <div className="form-field">
-          <label>{t('category')}</label>
-          <div className="expense-cat-grid" role="group" aria-label={t('category')}>
-            {topCats.map(cat => {
+          <label>{t('recentCategories')}</label>
+          <div className="v3-filter-scroll">
+            {recentCats.map(cat => {
               const active = categoryId === cat.id;
               return (
                 <button
                   key={cat.id}
                   type="button"
-                  className={`expense-cat-chip ${active ? 'is-active' : ''}`}
-                  aria-pressed={active}
+                  className={`v3-pill-btn ${active ? 'is-active v3-pill-bounce' : ''}`}
                   onClick={() => setCategoryId(cat.id)}
                 >
-                  <ExpenseCategoryIcon name={cat.icon} size={16} color={active ? undefined : cat.color} />
-                  <span className="truncate">{getCategoryLabel(cat, language)}</span>
+                  <ExpenseCategoryIcon name={cat.icon} size={15} color={active ? undefined : cat.color} />
+                  <span>{getCategoryLabel(cat, language)}</span>
                 </button>
               );
             })}
-            {visibleCats.length > 6 && (
-              <button
-                type="button"
-                className="expense-cat-chip choice-chip-add"
-                onClick={() => setShowMoreCats(true)}
-              >
-                <Plus size={16} aria-hidden="true" />
-                <span>{t('moreCategories')}</span>
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Date Chips */}
+        {/* 4-Column Category Tile Grid + See all */}
         <div className="form-field">
-          <label>{t('date')}</label>
-          <div className="chip-wrap-row">
+          <div className="flex items-center justify-between" style={{ marginBottom: '8px' }}>
+            <label style={{ margin: 0 }}>{t('allCategories')}</label>
+            <button type="button" className="v3-text-btn" onClick={() => setShowMoreCats(true)}>
+              {t('seeAll')}
+            </button>
+          </div>
+          <div className="v3-cat-tile-grid" role="group" aria-label={t('category')}>
+            {gridCats.map(cat => {
+              const active = categoryId === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`v3-cat-tile ${active ? 'is-active v3-pill-bounce' : ''}`}
+                  aria-pressed={active}
+                  onClick={() => setCategoryId(cat.id)}
+                >
+                  <ExpenseCategoryIcon name={cat.icon} size={20} color={active ? undefined : cat.color} />
+                  <span className="v3-cat-tile-label">{getCategoryLabel(cat, language)}</span>
+                </button>
+              );
+            })}
             <button
               type="button"
-              className={`choice-chip ${date === todayStr && !showCustomDate ? 'is-active' : ''}`}
+              className="v3-cat-tile v3-cat-tile-more"
+              onClick={() => setShowMoreCats(true)}
+            >
+              <Plus size={20} aria-hidden="true" />
+              <span className="v3-cat-tile-label">{t('moreCategories')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Date Pills */}
+        <div className="form-field">
+          <label>{t('date')}</label>
+          <div className="v3-filter-scroll">
+            <button
+              type="button"
+              className={`v3-pill-btn ${date === todayStr && !showCustomDate ? 'is-active' : ''}`}
               onClick={() => {
                 setDate(todayStr);
                 setShowCustomDate(false);
@@ -335,7 +345,7 @@ export function ExpenseForm() {
             </button>
             <button
               type="button"
-              className={`choice-chip ${date === yesterdayStr && !showCustomDate ? 'is-active' : ''}`}
+              className={`v3-pill-btn ${date === yesterdayStr && !showCustomDate ? 'is-active' : ''}`}
               onClick={() => {
                 setDate(yesterdayStr);
                 setShowCustomDate(false);
@@ -345,7 +355,7 @@ export function ExpenseForm() {
             </button>
             <button
               type="button"
-              className={`choice-chip ${showCustomDate || (date !== todayStr && date !== yesterdayStr) ? 'is-active' : ''}`}
+              className={`v3-pill-btn ${showCustomDate || (date !== todayStr && date !== yesterdayStr) ? 'is-active' : ''}`}
               onClick={() => setShowCustomDate(v => !v)}
             >
               <CalendarDays size={15} aria-hidden="true" />
@@ -363,15 +373,15 @@ export function ExpenseForm() {
           )}
         </div>
 
-        {/* Payment Method Chips */}
+        {/* Paid With Scrollable Pills */}
         <div className="form-field">
-          <label>{t('paymentMethod')}</label>
-          <div className="chip-wrap-row">
+          <label>{t('paidWith')}</label>
+          <div className="v3-filter-scroll">
             {EXPENSE_PAYMENT_METHODS.map(m => (
               <button
                 key={m.value}
                 type="button"
-                className={`choice-chip ${paymentMethod === m.value ? 'is-active' : ''}`}
+                className={`v3-pill-btn ${paymentMethod === m.value ? 'is-active v3-pill-bounce' : ''}`}
                 aria-pressed={paymentMethod === m.value}
                 onClick={() => setPaymentMethod(m.value)}
               >
@@ -401,17 +411,14 @@ export function ExpenseForm() {
           </p>
         )}
 
-        {/* Sticky Save Bar */}
-        <div className="transaction-form-sticky-bar">
-          <div className="form-actions sticky-actions">
-            <button type="submit" className="button button-primary" disabled={busy}>
-              <Check size={18} aria-hidden="true" />
-              <span>{t('save')}</span>
-            </button>
-            <Link to="/expenses" className="button button-secondary">
-              {t('cancel')}
-            </Link>
-          </div>
+        {/* Sticky 72px Save Expense Bar */}
+        <div className="transaction-form-sticky-bar v3-sticky-bar-72">
+          <button type="submit" className="button button-primary v3-btn-52" style={{ width: '100%' }} disabled={busy}>
+            <Check size={18} aria-hidden="true" />
+            <span>
+              {t('save')} {t(kind === 'expense' ? 'expenseKind' : 'incomeKind').toLowerCase()}
+            </span>
+          </button>
         </div>
       </form>
 

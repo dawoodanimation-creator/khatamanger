@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpDown, Search, UserPlus, X } from 'lucide-react';
+import { ArrowUpDown, BarChart3, Bell, Plus, Search, UserPlus, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { ReviewControls } from '../components/ReviewControls';
 import { Header } from '../components/Header';
@@ -142,22 +142,45 @@ export function Home() {
     categoryFilter !== 'all' ||
     udhaarCatFilter !== 'all';
 
+  const shopTitle = ledger.settings.profile?.shopName?.trim() || t('app');
+
   return (
     <>
-      <Header title={t('app')} home />
+      <Header caption={t('app')} title={shopTitle} home />
 
-      <div className="page-content home-content">
-        {/* Minimalist Summary: Plain white area, 2 big numbers side by side */}
+      <div className="page-content home-content v3-page-content">
+        {/* Green Gradient Hero Card */}
         <BalanceSummary
           outstanding={index.outstanding}
           payable={index.payable}
+          overdueCount={counts.overdue}
           hidden={hidden}
           onToggleHidden={() => updateSettings({ hideBalances: !hidden })}
         />
 
-        {/* Quiet 7-day backup reminder banner */}
+        {/* 3 Tonal Quick-Action Tiles */}
+        <div className="v3-quick-tiles v3-rise" style={{ '--rise-idx': 1 } as React.CSSProperties}>
+          <Link to="/customers/new" className="v3-quick-tile">
+            <UserPlus size={20} aria-hidden="true" />
+            <span>{t('addCustomer')}</span>
+          </Link>
+          <button
+            type="button"
+            className="v3-quick-tile"
+            onClick={() => setFilter(filter === 'overdue' ? 'all' : 'overdue')}
+          >
+            <Bell size={20} aria-hidden="true" />
+            <span>{t('remindersTile')}</span>
+          </button>
+          <Link to="/summary" className="v3-quick-tile">
+            <BarChart3 size={20} aria-hidden="true" />
+            <span>{t('summaryTile')}</span>
+          </Link>
+        </div>
+
+        {/* Slim Amber Backup Chip */}
         {showBackupBanner && (
-          <div className="backup-reminder-banner" role="status">
+          <div className="v3-amber-chip v3-rise" style={{ '--rise-idx': 2 } as React.CSSProperties} role="status">
             <Link to="/settings/backup" className="backup-banner-link">
               {t('backupBannerText')}
             </Link>
@@ -311,7 +334,7 @@ export function Home() {
             )}
           </div>
         ) : (
-          <div className="customer-list customer-rows-list">
+          <div className="v3-list-card v3-rise" style={{ '--rise-idx': 4 } as React.CSSProperties}>
             {sorted.map((customer, idx) => {
               const balance = index.balances.get(customer.id) ?? 0;
               const history = index.histories.get(customer.id);
@@ -323,7 +346,7 @@ export function Home() {
 
               return (
                 <div
-                  className={`customer-row ${isVisible && idx < 8 ? 'stagger-row' : ''}`}
+                  className={`v3-list-row-wrap ${isVisible && idx < 8 ? 'v3-row-rise' : ''}`}
                   style={isVisible && idx < 8 ? ({ '--stagger-idx': idx } as React.CSSProperties) : undefined}
                   key={customer.id}
                   hidden={!isVisible}
@@ -342,16 +365,15 @@ export function Home() {
         )}
       </div>
 
-      {/* Extended Floating Add Customer Button Above Bottom Nav */}
-      <div className="fab-above-nav-wrap">
-        <Link
-          className="button button-primary fab-extended-above-nav"
-          to="/customers/new"
-        >
-          <UserPlus size={18} aria-hidden="true" />
-          <span>{t('addCustomer')}</span>
-        </Link>
-      </div>
+      {/* Round 56px Floating Action Button */}
+      <Link
+        className="v3-fab"
+        to="/customers/new"
+        aria-label={t('addFirstCustomer')}
+        title={t('addCustomer')}
+      >
+        <Plus size={24} aria-hidden="true" />
+      </Link>
     </>
   );
 }
